@@ -141,7 +141,7 @@ class Meal(db.Model, BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
     cost = db.Column(db.Float(2))
-    img_path = db.Column(db.String(2048))
+    img_url = db.Column(db.String(2048))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
@@ -153,7 +153,7 @@ class Meal(db.Model, BaseModel):
         """Initialize a meal"""
         self.name = name
         self.cost = cost
-        self.img_path = img_path
+        self.img_path = img_url
 
 
 class Order(db.Model, BaseModel):
