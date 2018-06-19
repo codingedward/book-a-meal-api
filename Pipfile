@@ -1,0 +1,16 @@
+[[source]]
+url = "https://pypi.python.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[dev-packages]
+
+[packages]
+flask = "*"
+flask-sqlalchemy = "*"
+flask-restful = "*"
+flask-marshmallow = "*"
+flask-jwt-extended = "*"
+
+[requires]
+python_version = "2.7"
