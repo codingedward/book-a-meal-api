@@ -17,6 +17,7 @@ class MenuType:
     LUNCH = 2
     SUPPER = 3
 
+
 class BaseModel:
     """This will handle saving and deletion of models"""
 
@@ -62,7 +63,7 @@ class User(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, username, email, password, role = UserType.CUSTOMER):
+    def __init__(self, username, email, password, role=UserType.USER):
         """Initialize the user"""
         self.email = email
         self.role = role
@@ -75,7 +76,7 @@ class User(db.Model, BaseModel):
 
     def is_caterer(self):
         """Checks if current user is a caterer"""
-        return self.role == UserType.CATERER
+        return self.role == UserType.ADMIN
 
 
 class Menu(db.Model, BaseModel):
@@ -149,11 +150,11 @@ class Meal(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, name, cost, img_path):
+    def __init__(self, name, cost, img_url):
         """Initialize a meal"""
         self.name = name
         self.cost = cost
-        self.img_path = img_url
+        self.img_url = img_url
 
 
 class Order(db.Model, BaseModel):
