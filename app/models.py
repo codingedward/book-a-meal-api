@@ -10,13 +10,11 @@ class UserType:
     ADMIN = 1
     USER = 2
 
-
 class MenuType:
     """Menu categories"""
     BREAKFAST = 1
     LUNCH = 2
     SUPPER = 3
-
 
 class BaseModel:
     """This will handle saving and deletion of models"""
