@@ -1,87 +1,13 @@
 import re
 import json
 from datetime import date
-
-"""A request validator inspired by Laravel validation rules. 
-
-The rules supported include:
-1. accepted - this field must be yes, on, 1 or true
-2. after:date - must be after date specified in the format YYYY-MM-DD
-3. alpha - must be all alphabetic characters
-4. alpha_dash - alphas and dash allowed
-5. alpha_num - alpha numeric allowed
-6. array - must be an array
-7. before:date - must be before date specified in the format YYYY-MM-DD
-8. between:min,max - 
-9. boolean - true, false, 0 or 1 as well as "0" and "1"
-10. confirmed - must have foo_confirmation for a field foo
-11. date - must be in the format YYYY-MM-DD
-12. different:field - must be different from the specified field
-13. digits:value - must be numeric and must have exact length of value
-14. digits_between:min,max - must be numeric and have an exact length of 
-    value
-15. email - must be a valid email
-16. exists:table,column,... - the field under validation must exist on a 
-    table
-17. in:foo,bar,... - must be in the list given
-18. integer - the field must be an integer
-20. json - the field must be a JSON string
-21. max:value -  maximum value evaluated same as the size rule
-22. min:value - minimum value evaluated same as size rule
-23. numeric - must be a numeric value
-24. not_in:foo,bar... - field must not equal any of the values in the list
-25. regex:pattern
-26. required -  this field must be present
-27. required_if:another_field,value,...
-29. required_with:foo,bar,... - required if any of the other fields is 
-    present
-31. required_without:foo,bar,... - required without any of the other fields
-33. same:field - the two fields must match
-34. size:value - for a string, this is the length, for numeric data, value
-    is the integer value. 
-35. string - must be a string, empty strings are not allowed.
-36. unique:table,column,except,columnId - must be unique in the given 
-    table's column except the given columnId
-37. url - field under validation must be a url
-"""
+from .translator import trans
 
 class Validator:
     def __init__(self, request={}, rules={}):
         """Initialize rules and models"""
         self._rules = rules
         self._request = request
-        self._errors = {
-            'accepted': 'The :field: must be accepted',
-            'after': 'The date :field: must be after :other:',
-            'alpha': 'The :field: must be alphabetic',
-            'alpha_num': 'The :field: must be alphanumeric',
-            'array': 'The :field: must be an array',
-            'before': 'The date :field: must be before :other:',
-            'between': 'The :field: must be between :least: and :most:',
-            'boolean': 'The :field: must be boolean',
-            'confirmed': 'The :field: must be confirmed',
-            'date': 'The :field: must be a valid date format',
-            'different': 'The :field: must be different from :other:',
-            'digits': 'The :field: must be numeric and of length :length:',
-            'email': 'The :field: must be a valid email',
-            'exists': 'The :field: must exist on :model:',
-            'found_in': 'The :field: must be found in: :in:',
-            'integer': 'The :field: must be an integer',
-            'json': 'The :field: must be valid json format',
-            'most': 'The :field: must be less than :other:',
-            'least': 'The :field: must be more than :other:',
-            'numeric': 'The :field: must be numeric',
-            'not_in': 'The :field: must not be in: :not_in:',
-            'regex': 'The :field: must match the specified pattern',
-            'required': 'The :field: must be provided',
-            'required_with': 'The :field: must be provided with :other:',
-            'required_without': 'The :field: must be provided without :other:',
-            'same': 'The :field: must be the same as :other:',
-            'size': 'The :field: must be of the size :size:',
-            'string': 'The :field: must be a string',
-            'unique': 'The :field: must be unique for :model:',
-            'url': 'The :field: must be a valid url',
-        }
 
     def valid(self):
         # for every field and its rules...
@@ -133,7 +59,7 @@ class Validator:
         if self._request[field] not in valid: 
              return (
                  False, 
-                 self._errors['accepted'].replace(':field:', field)
+                 trans('accepted', {':field:': field})
              )
         return (True, '')
 
@@ -142,8 +68,7 @@ class Validator:
         if not field_date:
             return (
                 False,
-                self._errors['date']
-                .replace(':field:', field)
+                trans('date', {':field:': field})
             )
         after_date = self.__to_date(params)
         if not after_date:
@@ -152,9 +77,7 @@ class Validator:
         if field_date < after_date:
             return (
                 False,
-                self.errors['after']
-                .replace(':field:', field)
-                .repalce(':after:', params)
+                trans('after', {':field:': field, ':after': params})
             )
         return (True, '')
 
@@ -162,7 +85,7 @@ class Validator:
         if not str(self._request[field]).isalpha():
             return (
                 False,
-                self._errors['alpha'].replace(':field:', field)
+                trans('alpha', {':field:': field})
             )
         return (True, '')
 
@@ -171,7 +94,7 @@ class Validator:
         if not str(self._request[field]).isalpha():
             return (
                 False,
-                self._errors['alpha_dash'].replace(':field:', field)
+                trans('alpha_dash', {':field:': field})
             )
         return (True, '')
 
@@ -179,7 +102,7 @@ class Validator:
         if not str(self._request[field]).isalnum():
             return (
                 False,
-                self._errors['alpha_num'].replace(':field:', field)
+                trans('alpha_num', {':field:': field})
             )
         return True, ''
 
@@ -188,8 +111,7 @@ class Validator:
         if not field_date:
             return (
                 False,
-                self._errors['date']
-                .replace(':field:', field)
+                trans('date', {':field:': field})
             )
         before_date = self.__to_date(params)
         if not after_date:
@@ -198,9 +120,7 @@ class Validator:
         if field_date > before_date:
             return (
                 False,
-                self.errors['before']
-                .replace(':field:', field)
-                .repalce(':after:', params)
+                trans('before', {':field:': field, ':after:': params})
             )
         return (True, '')
 
@@ -209,10 +129,11 @@ class Validator:
         if least > self.request[field] > most:
             return (
                 False, 
-                self._errors['between']
-                .replace(':field:', field)
-                .replace(':least:', least)
-                .replace(':most:', most)
+                trans('between', {
+                    ':field:': field, 
+                    ':least:': least, 
+                    ':most:': most
+                })
             )
         return (True, '')
 
@@ -221,7 +142,7 @@ class Validator:
         if self._request[field] not in valid:
             return (
                 False,
-                self._errors['boolean'].replace(':field:', field)
+                trans('boolean', {':field:': field})
             )
         return (True, '')
 
@@ -231,8 +152,7 @@ class Validator:
                 self._request[field] != self.request[confirm_field]:
             return (
                 False,
-                self._errors['confirmed']
-                .replace(':field:', field)
+                trans('confirmed', {':field:': field})
             )
         return (True, '')
 
@@ -249,8 +169,7 @@ class Validator:
         if not ok:
             return (
                 False,
-                self._errors['date']
-                .replace(':field:', field)
+                trans('date', {':field:': field})
             )
         return (True, '')
 
@@ -258,9 +177,7 @@ class Validator:
         if self._request[field] == self._request[params]:
             return (
                 False,
-                self._errors['different']
-                .replace(':field:', field)
-                .replace(':other:', params)
+                trans('different', {':field:': field, ':other:': params})
             )
         return (True, '')
 
@@ -275,9 +192,7 @@ class Validator:
         if len(str_repr) != length:
             return (
                 False,
-                self._errors['digits']
-                .replace(':field:', field)
-                .replace(':length:', length)
+                trans('digits', {':field:': field, ':length:': length})
             )
         return (True, '')
 
@@ -286,7 +201,7 @@ class Validator:
                         self._request[field]):
             return (
                 False,
-                self._errors['email'].replace(':field:', field)
+                trans('email', {':field:': field})
             )
         return (True, '')
 
@@ -296,9 +211,7 @@ class Validator:
         if not model.query.filter_by(**{field: self._request[field]}).first():
             return (
                 False,
-                self._errors['exists']
-                .replace(':field:', field)
-                .replace(':model:', endName)
+                trans('exists', {':field:': field, ':model:': endName})
             )
         return (True, '')
 
@@ -307,9 +220,7 @@ class Validator:
         if not self._request[field] in valid:
             return (
                 False,
-                self._errors['found_in']
-                .replace(':field:', field)
-                .replace(':in:', valid.join(', '))
+                trans('found_in', {':field:': field, ':in:': valid})
             )
 
         return (True, '')
@@ -320,7 +231,7 @@ class Validator:
         except:
             return (
                 False, 
-                self._errors['integer'].replace(':field:', field)
+                trans('integer', {':field:': field})
             )
         return (True, '')
 
@@ -330,7 +241,7 @@ class Validator:
         except ValueError:
             return (
                 False,
-                self._errors['json'].replace(':field:', field)
+                trans('json', {':field:': field})
             )
         return (True, '')
 
@@ -348,9 +259,7 @@ class Validator:
         if not ok:
             return (
                 False,
-                self._errors['most']
-                .replace(':field:', field)
-                .replace(':most:', size)
+                trans('most', {':field:': field, ':most:': size})
             )
         return (True, '')
 
@@ -368,9 +277,7 @@ class Validator:
         if not ok:
             return (
                 False,
-                self._errors['least']
-                .replace(':field:', field)
-                .replace(':least:', size)
+                trans('least', {':field:': field, ':least:': size})
             )
         return (True, '')
 
@@ -380,7 +287,7 @@ class Validator:
         except:
             return (
                 False, 
-                self._errors['numeric'].replace(':field:', field)
+                trans('numeric', {':field:': field})
             )
         return (True, '')
 
@@ -389,9 +296,7 @@ class Validator:
         if not not_in:
             return (
                 False,
-                self._errors['not_in']
-                .replace(':field:', field)
-                .replace(':not_in:', params.replace(',', ', ')))
+                trans('not_in', {':field:': field, ':not_in:': params})
             )
         return (True, '')
 
@@ -399,7 +304,7 @@ class Validator:
         if not re.match(params, self._request[field]):
             return (
                 False,
-                self._errors['regex'].replace(':field:', field)
+                trans('regex', {':field:': field})
             )
         return (True, '')
 
@@ -407,16 +312,14 @@ class Validator:
         if self._request.get(field) is None:
             return  (
                 False,
-                self._errors['required'].replace(':field:', field)
+                trans('required', {':field:': field})
             )
 
     def _required_with(self, field=None, params=None, **kwargs):
         if self._request.get(params) and self._request.get(field) is None:
             return (
                 False,
-                self._errors['required_with']
-                .replace(':field:', field)
-                .replace(':other:', params)
+                trans('required_with', {':field:': field, ':other:': params})
             )
         return (True, '')
 
@@ -424,9 +327,7 @@ class Validator:
         if self._request.get(params) and self._request.get(field) is None:
             return (
                 False,
-                self._errors['required_without']
-                .replace(':field:', field)
-                .replace(':other:', params)
+                trans('required_without', {':field:': field, ':other:': params})
             )
         return (True, '')
 
@@ -434,9 +335,7 @@ class Validator:
         if self._request[field] != self._request[params]:
             return (
                 False,
-                self._errors['same']
-                .replace(':field:', field)
-                .replace(':other:', params)
+                trans('same', {':field:': field, ':other:': params})
             )
         return (True, '')
 
@@ -454,9 +353,7 @@ class Validator:
         if not ok:
             return (
                 False,
-                self._errors['size']
-                .replace(':field:', field)
-                .replace(':size:', size)
+                trans('size', {':field:': field, ':size:': size})
             )
         return (True, '')
 
@@ -464,7 +361,7 @@ class Validator:
         if not isinstance(self._request[field], str):
             return (
                 False,
-                self._errors['string'].replace(':field:', field)
+                trans('string', {':field:': field})
             )
         return (True, '')
 
@@ -474,9 +371,7 @@ class Validator:
         if not model.query.filter_by(**{unique: self._request[field]}).first():
             return (
                 False,
-                self._errors['unique']
-                .replace(':field:', field)
-                .replace(':model:', endName)
+                trans('unique', {':field:': field, ':model:': endName})
             )
 
     def _url(self, field=None, params=None, **kwargs):
@@ -487,8 +382,7 @@ class Validator:
         ):
             return (
                 False,
-                self._errors['url']
-                .replace(':field:')
+                trans('url', {':field:': field})
             )
         return (True, '')
 
