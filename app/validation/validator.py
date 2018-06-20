@@ -3,13 +3,18 @@ import json
 from datetime import date
 from .translator import trans
 
+class ValidationException(Exception):
+
+    def __init__(self, message):
+        Exception.__init__(self, message)
+
 class Validator:
     def __init__(self, request={}, rules={}):
         """Initialize rules and models"""
         self._rules = rules
         self._request = request
 
-    def valid(self):
+    def passes(self):
         # for every field and its rules...
         for field, rules in self._rules:
 
