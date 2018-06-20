@@ -18,7 +18,6 @@ class Validator:
     def passes(self):
         # for every field and its rules...
         for field, rules in self._rules.items():
-
             # for each of current field's rule...
             for rule in rules.split('|'):
                 # split rule name and its parameters...
@@ -29,8 +28,9 @@ class Validator:
                     rule_name = rule
                 func_name = '_' + rule_name # rule function name
 
-                # field exists? ...only when not executing required rule
-                if rule_name != 'required' and self._request[field]:
+                # field exists? ...only when not executing required like rule
+                if rule_name in ['required', 'required_without'] or \
+                        self._request.get(field):
 
                     # check if we have a function for this rule..
                     if not hasattr(self, func_name):
@@ -107,8 +107,7 @@ class Validator:
 
     def _alpha_dash(self, field=None, **kwargs):
         value = str(self._request[field]).replace('-','').replace(' ', '')
-        print(value)
-        if not value.isalpha():
+        if not value.isalnum():
             return (
                 False,
                 trans('alpha_dash', {':field:': field})
@@ -116,7 +115,8 @@ class Validator:
         return (True, '')
 
     def _alpha_num(self, field=None, **kwargs):
-        if not str(self._request[field]).isalnum():
+        value = str(self._request[field]).replace(' ', '')
+        if not value.isalnum():
             return (
                 False,
                 trans('alpha_num', {':field:': field})
@@ -131,7 +131,7 @@ class Validator:
                 trans('date', {':field:': field})
             )
         before_date = self.__to_date(params)
-        if not after_date:
+        if not before_date:
             raise Exception('Validator: before date must match YYYY-MM-DD')
 
         if field_date > before_date:
@@ -142,27 +142,29 @@ class Validator:
         return (True, '')
 
     def _between_numeric(self, field=None, params=None, **kwargs):
-        least, most = params.split(',')
-        if least > self.request[field] > most:
+        least, most = [int(x) for x in params.split(',')]
+        value = self._request[field]
+        if least > value or value > most:
             return (
                 False, 
-                trans('between', {
+                trans('between_numeric', {
                     ':field:': field, 
-                    ':least:': least, 
-                    ':most:': most
+                    ':least:': str(least), 
+                    ':most:': str(most)
                 })
             )
         return (True, '')
 
     def _between_string(self, field=None, params=None, **kwargs):
-        least, most = params.split(',')
-        if least > len(self.request[field]) > most:
+        least, most = [int(x) for x in params.split(',')]
+        value = len(self._request[field])
+        if least > value or value > most:
             return (
                 False, 
-                trans('between', {
+                trans('between_string', {
                     ':field:': field, 
-                    ':least:': least, 
-                    ':most:': most
+                    ':least:': str(least), 
+                    ':most:': str(most)
                 })
             )
         return (True, '')
@@ -179,7 +181,7 @@ class Validator:
     def _confirmed(self, field=None, **kwargs):
         confirm_field = field + '_confirmation'
         if self._request.get(confirm_field) is None or  \
-                self._request[field] != self.request[confirm_field]:
+                self._request[field] != self._request[confirm_field]:
             return (
                 False,
                 trans('confirmed', {':field:': field})
@@ -188,13 +190,13 @@ class Validator:
 
     def _date(self, field, **kwargs):
         ok = True
-        date_lst = [int(x) for x in self._requests[field].split('-')]
+        date_lst = self._request[field].split('-')
         ok = len(date_lst) == 3
         if ok:
             try:
-                year, month, day = date_lst
+                year, month, day = [int(x) for x in date_lst]
                 date(year, month, day)
-            except ValueError:
+            except (ValueError, TypeError):
                 ok = False
         if not ok:
             return (
@@ -204,7 +206,7 @@ class Validator:
         return (True, '')
 
     def _different(self, field=None, params=None, **kwargs):
-        if self._request[field] == self._request[params]:
+        if self._request.get(field) == self._request.get(params):
             return (
                 False,
                 trans('different', {':field:': field, ':other:': params})
@@ -213,7 +215,7 @@ class Validator:
 
     def _digits(self, field=None, params=None, **kwargs):
         length = int(params)
-        is_numeric, msg = self._isnumeric(field)
+        is_numeric, msg = self._numeric(field=field)
         if not is_numeric:
             return (False, msg)
         str_repr = str(self._request[field])
@@ -222,7 +224,7 @@ class Validator:
         if len(str_repr) != length:
             return (
                 False,
-                trans('digits', {':field:': field, ':length:': length})
+                trans('digits', {':field:': field, ':length:': str(length)})
             )
         return (True, '')
 
@@ -250,9 +252,8 @@ class Validator:
         if not self._request[field] in valid:
             return (
                 False,
-                trans('found_in', {':field:': field, ':in:': valid})
+                trans('found_in', {':field:': field})
             )
-
         return (True, '')
 
     def _integer(self, field=None, **kwargs):
@@ -276,21 +277,21 @@ class Validator:
         return (True, '')
 
     def _most_numeric(self, field=None, params=None, **kwargs):
-        size = int(params)
+        size = float(params)
         if self._request[field] > size:
             return (
                 False,
-                trans('most_numeric', {':field:': field, ':most:': size})
+                trans('most_numeric', {':field:': field, ':most:': str(size)})
             )
         return (True, '')
 
 
     def _most_string(self, field=None, params=None, **kwargs):
         size = int(params)
-        if len(self._requests[field]) > size:
+        if len(self._request[field]) > size:
             return (
                 False,
-                trans('most_string', {':field:': field, ':most:': size})
+                trans('most_string', {':field:': field, ':most:': str(size)})
             )
         return (True, '')
 
@@ -299,7 +300,7 @@ class Validator:
         if self._request[field] < size:
             return (
                 False,
-                trans('least_numeric', {':field:': field, ':least:': size})
+                trans('least_numeric', {':field:': field, ':least:': str(size)})
             )
         return (True, '')
 
@@ -308,7 +309,7 @@ class Validator:
         if len(self._request[field]) < size:
             return (
                 False,
-                trans('least_string', {':field:': field, ':least:': size})
+                trans('least_string', {':field:': field, ':least:': str(size)})
             )
         return (True, '')
 
@@ -323,8 +324,8 @@ class Validator:
         return (True, '')
 
     def _not_in(self, field=None, params=None, **kwargs):
-        not_in = not self._found_in(field, params)
-        if not not_in:
+        found_in, _ = self._found_in(field, params)
+        if found_in:
             return (
                 False,
                 trans('not_in', {':field:': field, ':not_in:': params})
@@ -345,9 +346,10 @@ class Validator:
                 False,
                 trans('required', {':field:': field})
             )
+        return (True, '')
 
     def _required_with(self, field=None, params=None, **kwargs):
-        if self._request.get(params) and self._request.get(field) is None:
+        if self._request.get(field) and self._request.get(params) is None:
             return (
                 False,
                 trans('required_with', {':field:': field, ':other:': params})
@@ -355,7 +357,7 @@ class Validator:
         return (True, '')
 
     def _required_without(self, field=None, params=None, **kwargs):
-        if self._request.get(params) and self._request.get(field) is None:
+        if self._request.get(params) is None and self._request.get(field) is None:
             return (
                 False,
                 trans('required_without', {':field:': field, ':other:': params})
@@ -375,7 +377,7 @@ class Validator:
         if abs(self._request[field] - size) > 0.01:
             return (
                 False,
-                trans('size_numeric', {':field:': field, ':size:': size})
+                trans('size_numeric', {':field:': field, ':size:': str(size)})
             )
         return (True, '')
 
@@ -385,7 +387,7 @@ class Validator:
         if len(self._request[field]) != size:
             return (
                 False,
-                trans('size_string', {':field:': field, ':size:': size})
+                trans('size_string', {':field:': field, ':size:': str(size)})
             )
         return (True, '')
 
@@ -418,10 +420,10 @@ class Validator:
         return (True, '')
 
     def __to_date(self, date_str):
-        date_lst = [int(x) for x in date_str.split('-')]
+        date_lst = date_str.split('-')
         if len(date_lst) == 3:
             try:
-                year, month, day = date_lst
+                year, month, day = [int(x) for x in date_lst]
                 return date(year, month, day)
             except ValueError:
                 return None
