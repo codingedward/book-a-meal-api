@@ -13,10 +13,11 @@ class Validator:
         """Initialize rules and models"""
         self._rules = rules
         self._request = request
+        self._errors = {}
 
     def passes(self):
         # for every field and its rules...
-        for field, rules in self._rules:
+        for field, rules in self._rules.items():
 
             # for each of current field's rule...
             for rule in rules.split('|'):
@@ -33,7 +34,8 @@ class Validator:
 
                     # check if we have a function for this rule..
                     if not hasattr(self, func_name):
-                        raise Exception('Validator: no rule named '+rule_name)
+                        raise Exception('Validator: no rule named '
+                                        + rule_name)
 
                     # now get that function and call it with the arguments
                     func = getattr(self, func_name)
@@ -41,23 +43,31 @@ class Validator:
 
                     # if rule does not pass save the error and bail
                     if not is_valid:
-                        if not self.errors.get(field):
-                            self.errors[field] = []
-                        self.errors[field].append(message)
+                        if not self._errors.get(field):
+                            self._errors[field] = []
+                        self._errors[field].append(message)
                         return False
         return True
+
+    def reset(self):
+        self._errors = []
+        self._rules = []
+        self._request = []
 
     def fails(self):
         return not self.passes()
 
-    def first(self, field=field):
+    def first(self, field=None):
         pass
 
     def errors(self):
-        return self.errors
+        return self._errors
 
-    def set_rules(rules={}):
+    def set_rules(self, rules):
         self._rules = rules
+
+    def set_request(self, request):
+        self._request = request
 
     def _accepted(self, field=None, **kwargs):
         valid = [1, '1', True, 'true', 'yes']
@@ -87,7 +97,8 @@ class Validator:
         return (True, '')
 
     def _alpha(self, field=None, **kwargs):
-        if not str(self._request[field]).isalpha():
+        value = str(self._request[field]).replace(' ', '')
+        if not value.isalpha():
             return (
                 False,
                 trans('alpha', {':field:': field})
@@ -95,8 +106,9 @@ class Validator:
         return (True, '')
 
     def _alpha_dash(self, field=None, **kwargs):
-        value = self._request[field].replace('-','')
-        if not str(self._request[field]).isalpha():
+        value = str(self._request[field]).replace('-','').replace(' ', '')
+        print(value)
+        if not value.isalpha():
             return (
                 False,
                 trans('alpha_dash', {':field:': field})
@@ -129,9 +141,22 @@ class Validator:
             )
         return (True, '')
 
-    def _between(self, field=None, params=None, **kwargs):
+    def _between_numeric(self, field=None, params=None, **kwargs):
         least, most = params.split(',')
         if least > self.request[field] > most:
+            return (
+                False, 
+                trans('between', {
+                    ':field:': field, 
+                    ':least:': least, 
+                    ':most:': most
+                })
+            )
+        return (True, '')
+
+    def _between_string(self, field=None, params=None, **kwargs):
+        least, most = params.split(',')
+        if least > len(self.request[field]) > most:
             return (
                 False, 
                 trans('between', {
@@ -250,39 +275,40 @@ class Validator:
             )
         return (True, '')
 
-    def _most(self, field=None, params=None, **kwargs):
-        ok = True
+    def _most_numeric(self, field=None, params=None, **kwargs):
         size = int(params)
-        value = self._requests[field]
-        if isinstance(value, str):
-            if len(value) < size:
-                ok = False
-        else:
-            value = float(value)
-            if value < size:
-                ok = False
-        if not ok:
+        if self._request[field] > size:
             return (
                 False,
-                trans('most', {':field:': field, ':most:': size})
+                trans('most_numeric', {':field:': field, ':most:': size})
             )
         return (True, '')
 
-    def _least(self, field=None, params=None, **kwargs):
-        ok = True
+
+    def _most_string(self, field=None, params=None, **kwargs):
         size = int(params)
-        value = self._requests[field]
-        if isinstance(value, str):
-            if len(value) > size:
-                ok = False
-        else:
-            value = float(value)
-            if value > size:
-                ok = False
-        if not ok:
+        if len(self._requests[field]) > size:
             return (
                 False,
-                trans('least', {':field:': field, ':least:': size})
+                trans('most_string', {':field:': field, ':most:': size})
+            )
+        return (True, '')
+
+    def _least_numeric(self, field=None, params=None, **kwargs):
+        size = int(params)
+        if self._request[field] < size:
+            return (
+                False,
+                trans('least_numeric', {':field:': field, ':least:': size})
+            )
+        return (True, '')
+
+    def _least_string(self, field=None, params=None, **kwargs):
+        size = int(params)
+        if len(self._request[field]) < size:
+            return (
+                False,
+                trans('least_string', {':field:': field, ':least:': size})
             )
         return (True, '')
 
@@ -297,7 +323,7 @@ class Validator:
         return (True, '')
 
     def _not_in(self, field=None, params=None, **kwargs):
-        not_in = !self._found_in(field, params)
+        not_in = not self._found_in(field, params)
         if not not_in:
             return (
                 False,
@@ -344,21 +370,22 @@ class Validator:
             )
         return (True, '')
 
-    def _size(self, field=None, params=None, **kwargs):
-        ok = True
-        size = int(params)
-        value = self._requests[field]
-        if isinstance(value, str):
-            if len(value) != size:
-                ok = False
-        else:
-            value = float(value)
-            if value != size:
-                ok = False
-        if not ok:
+    def _size_numeric(self, field=None, params=None, **kwargs):
+        size = float(params)
+        if abs(self._request[field] - size) > 0.01:
             return (
                 False,
-                trans('size', {':field:': field, ':size:': size})
+                trans('size_numeric', {':field:': field, ':size:': size})
+            )
+        return (True, '')
+
+
+    def _size_string(self, field=None, params=None, **kwargs):
+        size = int(params)
+        if len(self._request[field]) != size:
+            return (
+                False,
+                trans('size_string', {':field:': field, ':size:': size})
             )
         return (True, '')
 
@@ -380,7 +407,6 @@ class Validator:
             )
 
     def _url(self, field=None, params=None, **kwargs):
-        pattern = 
         if not re.match(
                 '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
                 self._request[field]
