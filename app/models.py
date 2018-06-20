@@ -231,7 +231,7 @@ class Order(db.Model, BaseModel):
     # relationship with the menu items
     menu_item = db.relationship(
         'MenuItem',
-        backref=db.backref("orders", lazy="dynamic")
+        backref=db.backref('orders', lazy='dynamic')
     )
 
     def __init__(self, menu_item_id, user_id, quantity):
@@ -262,7 +262,7 @@ class Notification(db.Model, BaseModel):
     # relationship with a user
     user = db.relationship(
         'User',
-        backref=db.backref("notifications", lazy="dynamic")
+        backref=db.backref('notifications', lazy='dynamic')
     )
 
     def __init__(self, title, message, user_id):
