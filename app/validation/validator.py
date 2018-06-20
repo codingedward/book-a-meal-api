@@ -357,10 +357,12 @@ class Validator:
         return (True, '')
 
     def _required_without(self, field=None, params=None, **kwargs):
-        if self._request.get(params) is None and self._request.get(field) is None:
+        if self._request.get(params) is None \
+                and self._request.get(field) is None:
             return (
                 False,
-                trans('required_without', {':field:': field, ':other:': params})
+                trans('required_without', {':field:': field, 
+                                           ':other:': params})
             )
         return (True, '')
 
@@ -409,10 +411,8 @@ class Validator:
             )
 
     def _url(self, field=None, params=None, **kwargs):
-        if not re.match(
-                '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
-                self._request[field]
-        ):
+        ptn = '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$'
+        if not re.match(ptn, self._request[field]):
             return (
                 False,
                 trans('url', {':field:': field})
