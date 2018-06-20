@@ -1,6 +1,7 @@
 """Contains the application's database models"""
 
 
+import json
 from app import db
 from passlib.hash import bcrypt
 
@@ -10,14 +11,29 @@ class UserType:
     ADMIN = 1
     USER = 2
 
+
 class MenuType:
     """Menu categories"""
     BREAKFAST = 1
     LUNCH = 2
     SUPPER = 3
 
+
 class BaseModel:
     """This will handle saving and deletion of models"""
+
+    _fields = []
+    _hidden = []
+    _timestamps = True
+
+    def make(self, data):
+        for field in self._fields:
+            if field in data:
+                setattr(self, field, data[field])
+
+    def create(self, data):
+        self.make(data)
+        self.save()
 
     def save(self):
         """Save current model"""
@@ -29,11 +45,38 @@ class BaseModel:
         db.session.delete(self)
         db.session.commit()
 
+    def to_dict(self):
+        dict_repr = {}
+
+        # check if has id
+        if getattr(self, 'id'):
+            dict_repr['id'] = self.id
+
+        # check if timestamps enabled and feed the dict
+        if self._timestamps:
+            created = getattr(self, 'created_at')
+            if created:
+                dict_repr['created_at'] = created
+            updated = getattr(self, 'updated_at')
+            if updated: 
+                dict_repr['updated_at'] = updated
+
+        # for every field declared...
+        for field in self._fields:
+            # as long as it is not hidden feed it...
+            if field not in self._hidden:
+                dict_repr[field] = getattr(self, field)
+        return dict_repr
+
+    def to_json(self):
+        return json.dumps(self.to_dict())
+
 
 class Blacklist(db.Model, BaseModel):
     """Holds JWT tokens revoked through user signing out"""
 
     __tablename__ = 'blacklist'
+    _fields = ['token']
 
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(500))
@@ -48,6 +91,8 @@ class User(db.Model, BaseModel):
     """This will have application's users details"""
 
     __tablename__ = 'users'
+    _hidden = ['password_hash']
+    _fields = ['username', 'email', 'password_hash', 'role']
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255))
@@ -68,6 +113,10 @@ class User(db.Model, BaseModel):
         self.username = username
         self.password_hash = bcrypt.encrypt(password)
 
+    def make(self, data):
+        BaseModel.make(self, data)
+        self.password_hash = bcrypt.encrypt(password)
+
     def validate_password(self, password):
         """Checks the password is correct against the password hash"""
         return bcrypt.verify(password, self.password_hash)
@@ -81,6 +130,7 @@ class Menu(db.Model, BaseModel):
     """Holds the menus"""
 
     __tablename__ = 'menus'
+    _fields = ['category']
 
     id = db.Column(db.Integer, primary_key=True)
     category = db.Column(db.Integer)
@@ -100,6 +150,7 @@ class MenuItem(db.Model, BaseModel):
     """Holds the menu item of the application"""
 
     __tablename__ = 'menu_items'
+    _fields = ['day', 'menu_id', 'meal_id', 'quantity']
 
     id = db.Column(db.Integer, primary_key=True)
     day = db.Column(db.Date, default=db.func.current_timestamp())
@@ -136,6 +187,7 @@ class Meal(db.Model, BaseModel):
     """Holds a meal in the application"""
 
     __tablename__ = 'meals'
+    _fields = ['name', 'cost', 'img_url']
 
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), unique=True)
@@ -159,6 +211,7 @@ class Order(db.Model, BaseModel):
     """Holds an order of the application"""
 
     __tablename__ = 'orders'
+    _fields = ['quantity', 'menu_item_id', 'user_id']
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, default=1)
@@ -192,6 +245,7 @@ class Notification(db.Model, BaseModel):
     """Notification model"""
 
     __tablename__ = 'notifications'
+    _fields = ['title', 'message', 'user_id']
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(255))
