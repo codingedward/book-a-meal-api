@@ -398,3 +398,15 @@ class TestValidator(unittest.TestCase):
         V.set_request({'field': 'xxxxx'})
         self.assertTrue(V.passes())
 
+    def test_url(self):
+        V = self.V
+        V.set_rules({'field': 'url'})
+
+        V.set_request({'field': 'hi there'})
+        self.assertTrue(V.fails())
+        err_str = str(V.errors())
+        self.assertIn('format is invalid', err_str)
+
+        V.set_request({'field': 'http://www.google.com'})
+        self.assertTrue(V.passes())
+
