@@ -1,5 +1,6 @@
 """Translates validation error messages for the response"""
 
+
 messages = {
     'accepted': 'The :field: must be accepted',
     'after': 'The date :field: must be after :other:',
