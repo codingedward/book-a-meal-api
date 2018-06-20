@@ -480,6 +480,16 @@ class Validator:
             )
 
     def _url(self, field=None, params=None, **kwargs):
+        pattern = 
+        if not re.match(
+                '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$',
+                self._request[field]
+        ):
+            return (
+                False,
+                self._errors['url']
+                .replace(':field:')
+            )
         return (True, '')
 
     def __to_date(self, date_str):
