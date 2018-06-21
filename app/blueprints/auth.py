@@ -21,8 +21,8 @@ def register():
     password"""
     user = User.create(request.json)
     return jsonify({ 
-        'error': False,
-        'message': 'Successfully registered account',
+        'success': True,
+        'message': 'Successfully registered account.',
         'user': user.to_json(),
     }), 201
 
