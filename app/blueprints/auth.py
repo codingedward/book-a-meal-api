@@ -19,9 +19,12 @@ auth = Blueprint('auth', __name__)
 def register():
     """Register a user using their username, email and 
     password"""
-
     user = User.create(request.json)
-    return jsonify({ 'user': user.to_json() })
+    return jsonify({ 
+        'error': False,
+        'message': 'Successfully registered account',
+        'user': user.to_json(),
+    }), 201
 
 
 @auth.route('/api/v1/auth/login', methods=['POST'])
