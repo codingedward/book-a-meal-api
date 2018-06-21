@@ -18,6 +18,8 @@ nose-cov = "*"
 passlib = "*"
 gunicorn = "*"
 bcrypt = "*"
+flask-script = "*"
+"psycopg2" = "*"
 
 [requires]
 python_version = "3.6"
