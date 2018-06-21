@@ -52,6 +52,6 @@ def validate(Request):
         def wrapper(*args, **kwargs):
             req = Request()
             req.validate()
-            fn(*args, **kwargs)
+            return fn(*args, **kwargs)
         return wrapper
     return decorator
