@@ -28,7 +28,6 @@ def create_app(config_name):
 
     # register blueprints
     app.register_blueprint(auth)
-    app.register_blueprint(documentation)
 
     # initialize the database
     db.init_app(app)

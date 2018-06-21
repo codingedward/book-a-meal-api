@@ -1,3 +1,4 @@
+from functools import wraps
 from app.utils import current_user
 from flask import jsonify, make_response, abort
 from flask_jwt_extended import jwt_required

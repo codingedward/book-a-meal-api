@@ -2,7 +2,7 @@
 
 
 from app.validation import validate
-from app.middlewares import admin_auth, user_auth
+from app.middlewares.auth import admin_auth, user_auth
 from app.models import User, Blacklist
 from flask import Blueprint, request, jsonify, make_response
 from flask_jwt_extended import (
