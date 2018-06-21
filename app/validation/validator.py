@@ -2,11 +2,14 @@ import re
 import json
 from datetime import date
 from .translator import trans
+from app.models import User
+
 
 class ValidationException(Exception):
+    def __init__(self, errors):
+        Exception.__init__(self)
+        self.errors = errors
 
-    def __init__(self, message):
-        Exception.__init__(self, message)
 
 class Validator:
     def __init__(self, request={}, rules={}):
@@ -50,15 +53,12 @@ class Validator:
         return True
 
     def reset(self):
-        self._errors = []
-        self._rules = []
-        self._request = []
+        self._rules = {}
+        self._errors = {}
+        self._request = {}
 
     def fails(self):
         return not self.passes()
-
-    def first(self, field=None):
-        pass
 
     def errors(self):
         return self._errors
@@ -402,13 +402,14 @@ class Validator:
         return (True, '')
 
     def _unique(self, field=None, params=None, **kwargs):
-        modelName, unique, endName = params.split(',')
+        modelName, unique = params.split(',')
         model = eval(modelName)
-        if not model.query.filter_by(**{unique: self._request[field]}).first():
+        if model.query.filter_by(**{unique: self._request[field]}).first():
             return (
                 False,
-                trans('unique', {':field:': field, ':model:': endName})
+                trans('unique', {':field:': field})
             )
+        return (True, '')
 
     def _url(self, field=None, params=None, **kwargs):
         ptn = '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$'
