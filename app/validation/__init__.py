@@ -41,3 +41,17 @@ The rules supported include:
 37. url - field under validation must be a url
 """
 
+
+
+from functools import wraps
+
+
+def validate(Request):
+    def decorator(fn):
+        @wraps(fn)
+        def wrapper(*args, **kwargs):
+            req = Request()
+            req.validate()
+            fn(*args, **kwargs)
+        return wrapper
+    return decorator
