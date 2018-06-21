@@ -4,6 +4,7 @@
 import json
 from app import db
 from passlib.hash import bcrypt
+from datetime import datetime
 
 
 class UserType:
@@ -26,14 +27,23 @@ class BaseModel:
     _hidden = []
     _timestamps = True
 
-    def make(self, data):
-        for field in self._fields:
-            if field in data:
-                setattr(self, field, data[field])
+    @classmethod
+    def make(cls, data):
+        instance = cls()
+        instance.from_dict(data)
+        return instance
 
-    def create(self, data):
-        self.make(data)
-        self.save()
+    @classmethod
+    def create(cls, data):
+        instance = cls()
+        instance.from_dict(data)
+        instance.save()
+        return instance
+
+    def from_dict(self, data):
+        for field in instance._fields:
+            if field in data:
+                setattr(instance, field, data[field])
 
     def save(self):
         """Save current model"""
@@ -56,16 +66,20 @@ class BaseModel:
         if self._timestamps:
             created = getattr(self, 'created_at')
             if created:
-                dict_repr['created_at'] = created
+                dict_repr['created_at'] = str(created)
             updated = getattr(self, 'updated_at')
             if updated: 
-                dict_repr['updated_at'] = updated
+                dict_repr['updated_at'] = str(updated)
 
         # for every field declared...
         for field in self._fields:
             # as long as it is not hidden feed it...
             if field not in self._hidden:
-                dict_repr[field] = getattr(self, field)
+                value = getattr(self, field)
+                if isinstance(value, datetime):
+                    dict_repr[field] =  str(value)
+                else:
+                    dict_repr[field] = value
         return dict_repr
 
     def to_json(self):
@@ -82,7 +96,7 @@ class Blacklist(db.Model, BaseModel):
     token = db.Column(db.String(500))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
 
-    def __init__(self, token):
+    def __init__(self, token=None):
         """Initialiaze the blacklist record"""
         self.token = token
 
@@ -91,8 +105,8 @@ class User(db.Model, BaseModel):
     """This will have application's users details"""
 
     __tablename__ = 'users'
-    _hidden = ['password_hash']
-    _fields = ['username', 'email', 'password_hash', 'role']
+    _hidden = ['password']
+    _fields = ['username', 'email', 'password', 'role']
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255))
@@ -106,16 +120,22 @@ class User(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, username, email, password, role=UserType.USER):
+    def __init__(self, username=None, email=None,\
+                 password=None, role=UserType.USER):
         """Initialize the user"""
         self.email = email
         self.role = role
         self.username = username
-        self.password_hash = bcrypt.encrypt(password)
+        if password:
+            self.password = bcrypt.encrypt(password)
 
-    def make(self, data):
-        BaseModel.make(self, data)
-        self.password_hash = bcrypt.encrypt(password)
+    def from_dict(self, data):
+        for field in self._fields:
+            if field in data:
+                if field == 'password':
+                    self.password_hash = bcrypt.encrypt(data[field])
+                else:
+                    setattr(self, field, data[field])
 
     def validate_password(self, password):
         """Checks the password is correct against the password hash"""
@@ -141,7 +161,7 @@ class Menu(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, category):
+    def __init__(self, category=None):
         """Initialize the menu"""
         self.category = category
 
@@ -176,7 +196,7 @@ class MenuItem(db.Model, BaseModel):
         backref=db.backref('menu_items', lazy='dynamic')
     )
 
-    def __init__(self, menu_id, meal_id, quantity=1):
+    def __init__(self, menu_id=None, meal_id=None, quantity=1):
         """Initialize a meal item"""
         self.menu_id = menu_id
         self.meal_id = meal_id
@@ -200,7 +220,7 @@ class Meal(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, name, cost, img_url):
+    def __init__(self, name=None, cost=None, img_url=None):
         """Initialize a meal"""
         self.name = name
         self.cost = cost
@@ -234,7 +254,7 @@ class Order(db.Model, BaseModel):
         backref=db.backref('orders', lazy='dynamic')
     )
 
-    def __init__(self, menu_item_id, user_id, quantity):
+    def __init__(self, menu_item_id=None, user_id=None, quantity=None):
         """Initialize the order"""
         self.user_id = user_id
         self.quantity = quantity
@@ -265,7 +285,7 @@ class Notification(db.Model, BaseModel):
         backref=db.backref('notifications', lazy='dynamic')
     )
 
-    def __init__(self, title, message, user_id):
+    def __init__(self, title=None, message=None, user_id=None):
         """Initialize the notification"""
         self.title = title
         self.message = message
