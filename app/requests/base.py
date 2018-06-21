@@ -3,7 +3,6 @@ from app.validation.validator import Validator, ValidationException
 
 
 class JsonRequest:
-
     def __init__(self):
         if not request.is_json:
             raise ValidationException(['Request must be valid JSON'])
@@ -14,7 +13,7 @@ class JsonRequest:
 
     def validate(self):
         if self.validator.fails():
-            raise ValidationException(self.validator.first())
+            raise ValidationException(self.validator.errors())
 
     def rules(self):
         return {}
