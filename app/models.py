@@ -111,7 +111,7 @@ class User(db.Model, BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255))
     email = db.Column(db.String(1024), unique=True)
-    password_hash = db.Column(db.String(300))
+    password = db.Column(db.String(300))
     role = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
@@ -133,13 +133,13 @@ class User(db.Model, BaseModel):
         for field in self._fields:
             if field in data:
                 if field == 'password':
-                    self.password_hash = bcrypt.encrypt(data[field])
+                    self.password = bcrypt.encrypt(data[field])
                 else:
                     setattr(self, field, data[field])
 
     def validate_password(self, password):
         """Checks the password is correct against the password hash"""
-        return bcrypt.verify(password, self.password_hash)
+        return bcrypt.verify(password, self.password)
 
     def is_caterer(self):
         """Checks if current user is a caterer"""
