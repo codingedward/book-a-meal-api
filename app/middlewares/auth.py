@@ -8,7 +8,7 @@ def user_auth(fn):
     @wraps(fn)
     @jwt_required
     def wrapper(*args, **kwargs):
-        fn(*args, **kwargs)
+        return fn(*args, **kwargs)
     return wrapper
 
 def admin_auth(fn):
@@ -22,5 +22,5 @@ def admin_auth(fn):
                     401
                 )
             )
-        fn(*args, **kwargs)
+        return fn(*args, **kwargs)
     return wrapper
