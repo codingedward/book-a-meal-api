@@ -2,7 +2,9 @@ import re
 import json
 from datetime import date
 from .translator import trans
-from app.models import User
+from app.models import (
+    User, Meal, Menu, MenuItem, Order, Notification
+) 
 
 
 class ValidationException(Exception):
@@ -243,7 +245,7 @@ class Validator:
         if not model.query.filter_by(**{field: self._request[field]}).first():
             return (
                 False,
-                trans('exists', {':field:': field, ':model:': endName})
+                trans('exists', {':field:': field})
             )
         return (True, '')
 
@@ -415,9 +417,10 @@ class Validator:
         return (True, '')
 
     def _unique(self, field=None, params=None, **kwargs):
-        modelName, unique = params.split(',')
+        modelName, column = params.split(',')
         model = eval(modelName)
-        if model.query.filter_by(**{unique: self._request[field]}).first():
+        predicate = getattr(model, column).ilike(self._request[field])
+        if model.query.filter(predicate).first(): 
             return (
                 False,
                 trans('unique', {':field:': field})
