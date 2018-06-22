@@ -259,7 +259,7 @@ class Validator:
     def _integer(self, field=None, **kwargs):
         try:
             int(self._request[field])
-        except:
+        except ValueError:
             return (
                 False, 
                 trans('integer', {':field:': field})
@@ -316,7 +316,7 @@ class Validator:
     def _numeric(self, field=None, **kwargs):
         try:
             float(self._request[field])
-        except:
+        except ValueError:
             return (
                 False, 
                 trans('numeric', {':field:': field})
@@ -331,6 +331,19 @@ class Validator:
                 trans('not_in', {':field:': field, ':not_in:': params})
             )
         return (True, '')
+
+    def _positive(self, field=None, params=None, **kwargs):
+        try:
+            val = float(self._request[field])
+            if val < 0: 
+                raise ValueError()
+        except ValueError:
+            return (
+                False, 
+                trans('positive', {':field:': field})
+            )
+        return (True, '')
+
 
     def _regex(self, field=None, params=None, **kwargs):
         if not re.match(params, str(self._request[field])):

@@ -28,6 +28,7 @@ messages = {
     'least_numeric': 'The :field: must be at least :least:.',
     'not_in': 'The selected :field: is invalid.',
     'numeric': 'The :field: must be a number.',
+    'positive': 'The :field: must be a positive number.',
     'regex': 'The :field: format is invalid.',
     'required': 'The :field: field is required.',
     'required_with': 'The :field: field is required when :other: is present.',
