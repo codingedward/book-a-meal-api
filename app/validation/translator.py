@@ -24,7 +24,7 @@ messages = {
     'json': 'The :field: must be valid json format.',
     'most_string': 'The :field: must not be greater than :most: characters.',
     'most_numeric': 'The :field: must not be greater than :most:.',
-    'least_string': 'The :field: must be at least :least:. characters.',
+    'least_string': 'The :field: must be at least :least: characters.',
     'least_numeric': 'The :field: must be at least :least:.',
     'not_in': 'The selected :field: is invalid.',
     'numeric': 'The :field: must be a number.',

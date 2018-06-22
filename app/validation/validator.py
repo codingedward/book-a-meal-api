@@ -230,7 +230,7 @@ class Validator:
 
     def _email(self, field=None, **kwargs):
         if not re.match(r"^[A-Za-z0-9\.\+_-]+@[A-Za-z0-9\._-]+\.[a-zA-Z]*$",
-                        self._request[field]):
+                        str(self._request[field])):
             return (
                 False,
                 trans('email', {':field:': field})
@@ -333,7 +333,7 @@ class Validator:
         return (True, '')
 
     def _regex(self, field=None, params=None, **kwargs):
-        if not re.match(params, self._request[field]):
+        if not re.match(params, str(self._request[field])):
             return (
                 False,
                 trans('regex', {':field:': field})
