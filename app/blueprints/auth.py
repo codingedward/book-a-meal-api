@@ -23,7 +23,9 @@ def register():
     return jsonify({ 
         'success': True,
         'message': 'Successfully registered account.',
-        'user': user.to_json(),
+        'data': {
+            'user': user.to_dict(),
+        }
     }), 201
 
 
@@ -34,10 +36,20 @@ def login():
 
     user = User.query.filter_by(email=request.json['email']).first()
     if not user or not user.validate_password(request.json['password']):
-        return jsonify({'errors': ['Invalid credentials']}), 400
+        return jsonify({
+            'success': False,
+            'message': 'Invalid credentials',
+        }), 400
 
-    access_token = create_access_token(identity=request.json['email'])
-    return jsonify({'access_token': access_token, 'user': user.to_json()}), 200
+    token = create_access_token(identity=request.json['email'])
+    return jsonify({
+        'success': True,
+        'message': 'Successfully logged in',
+        'data': {
+            'access_token': token,
+            'user': user.to_dict()
+        }
+    }), 200
 
 
 @auth.route('/api/v1/auth/get', methods=['GET'])
@@ -46,7 +58,13 @@ def get_user():
     """Returns the authencicated users details"""
 
     user = User.query.filter_by(email=get_jwt_identity()).first()
-    return jsonify({'user': user.to_json()}), 200
+    return jsonify({
+        'success': True,
+        'message': 'Successfully retrieved user',
+        'data': {
+            'user': user.to_dict()
+        }
+    }), 200
 
 
 @auth.route('/api/v1/auth/logout', methods=['DELETE'])
@@ -57,5 +75,8 @@ def logout():
     jti = get_raw_jwt()['jti']
     blacklist = Blacklist(token=jti)
     blacklist.save()
-    return jsonify({'message': 'Successfully logged out.'}), 200
+    return jsonify({
+        'success': True,
+        'message': 'Successfully logged out.'
+    }), 200
 
