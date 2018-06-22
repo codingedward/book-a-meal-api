@@ -23,33 +23,65 @@ class BaseTest(unittest.TestCase):
         user = self._createUser(email=email, role=UserType.USER)
         return user, self._authenticate(user)
 
+    def data(self):
+        """Test model data"""
+        return json.dumps({})
+
+    def data_only(self, fields):
+        """Specify the only fields you need for the request"""
+        only = {}
+        data = json.loads(self.data())
+        for field, value in data.items():
+            if field in fields:
+                only[field] = value
+        return json.dumps(only)
+
+    def data_with(self, fields):
+        """Modify default data fields"""
+        with_fields = json.loads(self.data())
+        for field, value in fields.items():
+            with_fields[field] = value
+        return json.dumps(with_fields)
+
+    def data_without(self, fields):
+        """Specify data fields not to include on the request"""
+        without = {}
+        data = json.loads(self.data())
+        for field, value in data.items():
+            if field not in fields:
+                without[field] = value
+        return json.dumps(without)
+
+    def to_json(self, res):
+        return json.loads(res.get_data(as_text=True))
+
     def _createUser(self, email, role):
         """Creates a user with given mail and role"""
         with self.app.app_context():
             user = User.query.filter_by(email=email).first()
             if not user:
                 user = User(
-                    name='John',
+                    username='John',
                     email=email, 
                     password='secret',
                     role=role
                 )
                 user.save()
-            return user
+            return user.to_dict()
         
     def _authenticate(self, user):
         """Authenticates a user and returns the auth headers"""
         res = self.client.post(
             '/api/v1/auth/login',
             data=json.dumps({
-                'email': user.email,
-                'password': user.password
+                'email': user['email'],
+                'password': 'secret'
             }),
             headers={'Content-Type' : 'application/json'}
         )
         result = json.loads(res.get_data(as_text=True))
         return {
             'Content-Type' : 'application/json',
-            'Authorization': 'Bearer {}'.format(result['access_token'])
+            'Authorization': 'Bearer {}'.format(result['data']['access_token'])
         }
 
