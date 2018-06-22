@@ -1,8 +1,10 @@
 """Handles application's errors and exceptions"""
 
 
+import json
 from flask import jsonify
 from app.models import Blacklist
+from app.validation.validator import ValidationException
 from werkzeug.exceptions import default_exceptions
 
 
@@ -11,10 +13,20 @@ def init_app(app):
     for code in default_exceptions.keys():
         @app.errorhandler(code)
         def handle_error(ex):
-            """Returns the http exception with its error code
-            and message.
-            """
-            return jsonify({'message': str(ex)}), code
+            """Returns the http exception with its error code and message."""
+            return jsonify({
+                'success': False,
+                'message': str(ex)
+            }), code
+
+        @app.errorhandler(ValidationException)
+        def validation_exceptions(ex):
+            """Returns appropriate validation errors"""
+            return jsonify({
+                'success': False,
+                'message': 'Validation error.',
+                'errors': ex.errors,
+            }), 400
 
 
 def init_jwt(jwt):
