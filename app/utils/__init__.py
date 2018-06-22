@@ -6,3 +6,4 @@ def current_user():
     user = User.query.filter_by(email=get_jwt_identity()).first()
     if not user:
         raise Exception('Authentication: current user not found')
+    return user
