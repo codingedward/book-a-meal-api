@@ -2,6 +2,7 @@
 
 
 from flask import Flask
+from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from instance.config import app_config
@@ -12,6 +13,7 @@ db = SQLAlchemy()
 
 from app.blueprints.auth import auth
 from app.exceptions import handler
+from app.resources.meals import MealResource, MealListResource
 
 
 def create_app(config_name):
@@ -20,14 +22,18 @@ def create_app(config_name):
 
     # initialize flask and jwt
     app = Flask(__name__, instance_relative_config=True)
-    jwt = JWTManager(app)
-
     # load configuration
     app.config.from_object(app_config[config_name])
     app.config.from_pyfile('config.py')
 
+    jwt = JWTManager(app)
+    api = Api(app, prefix='/api/v1')
+
     # register blueprints
     app.register_blueprint(auth)
+
+    api.add_resource(MealResource, '/meals/<int:meal_id>')
+    api.add_resource(MealListResource, '/meals')
 
     # initialize the database
     db.init_app(app)
