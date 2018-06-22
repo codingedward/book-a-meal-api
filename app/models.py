@@ -40,10 +40,31 @@ class BaseModel:
         instance.save()
         return instance
 
+    def update(self, data):
+        self.from_dict(data)
+        self.save()
+        return self
+
+    def paginate(self):
+        pg = self.query.paginate(error_out=False)
+        return {
+            'meta': {
+                'pages': pg.pages,
+                'total': pg.total,
+                'has_next': pg.has_next,
+                'has_prev': pg.has_prev,
+                'per_page': pg.per_page,
+                'next_page': pg.next_num,
+                'prev_page': pg.prev_num,
+            },
+            'data': pg.items()
+        }
+
     def from_dict(self, data):
-        for field in instance._fields:
+        for field in self._fields:
             if field in data:
-                setattr(instance, field, data[field])
+                setattr(self, field, data[field])
+        return self
 
     def save(self):
         """Save current model"""
