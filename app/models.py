@@ -45,8 +45,9 @@ class BaseModel:
         self.save()
         return self
 
-    def paginate(self):
-        pg = self.query.paginate(error_out=False)
+    @classmethod
+    def paginate(cls):
+        pg = cls.query.paginate(error_out=False)
         return {
             'meta': {
                 'pages': pg.pages,
@@ -57,7 +58,7 @@ class BaseModel:
                 'next_page': pg.next_num,
                 'prev_page': pg.prev_num,
             },
-            'data': pg.items()
+            'data':[ inst.to_dict() for inst in pg.items ]
         }
 
     def from_dict(self, data):
