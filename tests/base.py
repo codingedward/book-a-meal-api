@@ -55,6 +55,9 @@ class BaseTest(unittest.TestCase):
     def to_json(self, res):
         return json.loads(res.get_data(as_text=True))
 
+    def to_dict(self, json_res):
+        return json.dumps(json_res)
+
     def _createUser(self, email, role):
         """Creates a user with given mail and role"""
         with self.app.app_context():
