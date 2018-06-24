@@ -45,6 +45,6 @@ messages = {
 def trans(rule, fields):
     message = messages[rule] 
     for k, v in fields.items():
-        message = message.replace(k, v)
+        message = message.replace(k, v).replace('_', ' ')
     return message
 
