@@ -168,7 +168,7 @@ class Menu(db.Model, BaseModel):
     _fields = ['name']
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Integer)
+    name = db.Column(db.String(255))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
