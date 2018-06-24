@@ -240,9 +240,9 @@ class Validator:
         return (True, '')
 
     def _exists(self, field=None, params=None, **kwargs):
-        modelName, endName = params.split(',')
+        modelName, column = params.split(',')
         model = eval(modelName)
-        if not model.query.filter_by(**{field: self._request[field]}).first():
+        if not model.query.filter_by(**{column: self._request[field]}).first():
             return (
                 False,
                 trans('exists', {':field:': field})
