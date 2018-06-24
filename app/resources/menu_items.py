@@ -15,12 +15,12 @@ class MenuItemResource(Resource):
         if not menu_item:
             return {
                 'success': False,
-                'message': 'Menu item not found',
+                'message': 'Menu item not found.',
             }, 404
 
         return {
             'success': True,
-            'message': 'Menu item successfully retrieved',
+            'message': 'Menu item successfully retrieved.',
             'menu_item': menu_item.to_dict()
         }
 
@@ -33,7 +33,7 @@ class MenuItemResource(Resource):
         if not menu_item:
             return {
                 'success': False,
-                'message': 'Menu item not found',
+                'message': 'Menu item not found.',
             }, 404
 
         # for uniqueness check...
@@ -46,9 +46,9 @@ class MenuItemResource(Resource):
         if existing and existing.id != menu_item_id:
             return {
                 'success': False,
-                'message': 'Validation error',
+                'message': 'Validation error.',
                 'errors': {
-                    'ids': ['Menu item must be unique']
+                    'ids': ['Menu item must be unique.']
                 }
             }, 400
 
@@ -56,7 +56,7 @@ class MenuItemResource(Resource):
         menu_item.update(request.json)
         return {
             'success': True,
-            'message': 'Menu item successfully updated',
+            'message': 'Menu item successfully updated.',
             'menu_item': menu_item.to_dict()
         }
 
@@ -67,13 +67,13 @@ class MenuItemResource(Resource):
         if not menu_item:
             return {
                 'success': False,
-                'message': 'Menu item not found',
+                'message': 'Menu item not found.',
             }, 404
 
         menu_item.delete()
         return {
             'success': True,
-            'message': 'Menu item successfully deleted',
+            'message': 'Menu item successfully deleted.',
         }
 
 
@@ -82,7 +82,7 @@ class MenuItemListResource(Resource):
     def get(self):
         resp = MenuItem.paginate()
         resp['menu_items'] = resp['data']
-        resp['message'] = 'Successfully retrieved menu items'
+        resp['message'] = 'Successfully retrieved menu items.'
         resp['success'] = True
         return resp
 
@@ -98,9 +98,9 @@ class MenuItemListResource(Resource):
         if menu_item: 
             return {
                 'success': False,
-                'message': 'Validation error',
+                'message': 'Validation error.',
                 'errors': {
-                    'ids': ['Menu item must be unique']
+                    'ids': ['Menu item must be unique.']
                 }
             }, 400
 

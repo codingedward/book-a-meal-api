@@ -15,12 +15,12 @@ class MealResource(Resource):
         if not meal:
             return {
                 'success': False,
-                'message': 'Meal not found',
+                'message': 'Meal not found.',
             }, 404
 
         return {
             'success': True,
-            'message': 'Meal successfully retrieved',
+            'message': 'Meal successfully retrieved.',
             'meal': meal.to_dict()
         }
 
@@ -36,9 +36,9 @@ class MealResource(Resource):
                     meal.id != meal_id:
                 return {
                     'success': False,
-                    'message': 'Validation error',
+                    'message': 'Validation error.',
                     'errors': {
-                        'name': ['Meal name must be unique']
+                        'name': ['Meal name must be unique.']
                     }
                 }, 400
 
@@ -54,7 +54,7 @@ class MealResource(Resource):
         meal.update(request.json)
         return {
             'success': True,
-            'message': 'Meal successfully updated',
+            'message': 'Meal successfully updated.',
             'meal': meal.to_dict()
         }
 
@@ -65,13 +65,13 @@ class MealResource(Resource):
         if not meal:
             return {
                 'success': False,
-                'message': 'Meal not found',
+                'message': 'Meal not found.',
             }, 404
 
         meal.delete()
         return {
             'success': True,
-            'message': 'Meal successfully deleted',
+            'message': 'Meal successfully deleted.',
         }
 
 
@@ -80,7 +80,7 @@ class MealListResource(Resource):
     def get(self):
         resp = Meal.paginate()
         resp['meals'] = resp['data']
-        resp['message'] = 'Successfully retrieved meals'
+        resp['message'] = 'Successfully retrieved meals.'
         resp['success'] = True
         return resp
 

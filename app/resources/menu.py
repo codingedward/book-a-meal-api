@@ -15,12 +15,12 @@ class MenuResource(Resource):
         if not menu:
             return {
                 'success': False,
-                'message': 'Menu not found',
+                'message': 'Menu not found.',
             }, 404
 
         return {
             'success': True,
-            'message': 'Menu successfully retrieved',
+            'message': 'Menu successfully retrieved.',
             'menu': menu.to_dict()
         }
 
@@ -36,9 +36,9 @@ class MenuResource(Resource):
                     menu.id != menu_id:
                 return {
                     'success': False,
-                    'message': 'Validation error',
+                    'message': 'Validation error.',
                     'errors': {
-                        'name': ['Menu name must be unique']
+                        'name': ['Menu name must be unique.']
                     }
                 }, 400
 
@@ -47,14 +47,14 @@ class MenuResource(Resource):
         if not menu:
             return {
                 'success': False,
-                'message': 'Menu not found',
+                'message': 'Menu not found.',
             }, 404
 
         # now update...
         menu.update(request.json)
         return {
             'success': True,
-            'message': 'Menu successfully updated',
+            'message': 'Menu successfully updated.',
             'menu': menu.to_dict()
         }
 
@@ -65,13 +65,13 @@ class MenuResource(Resource):
         if not menu:
             return {
                 'success': False,
-                'message': 'Menu not found',
+                'message': 'Menu not found.',
             }, 404
 
         menu.delete()
         return {
             'success': True,
-            'message': 'Menu successfully deleted',
+            'message': 'Menu successfully deleted.',
         }
 
 
@@ -80,7 +80,7 @@ class MenuListResource(Resource):
     def get(self):
         resp = Menu.paginate()
         resp['menus'] = resp['data']
-        resp['message'] = 'Successfully retrieved menus'
+        resp['message'] = 'Successfully retrieved menus.'
         resp['success'] = True
         return resp
 
