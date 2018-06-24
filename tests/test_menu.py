@@ -35,6 +35,16 @@ class TestMenu(BaseTest):
         self.assertEqual(res.status_code, 400)
         self.assertIn(b'name field is required', res.data)
 
+    def test_cannot_create_menu_without_unique_name(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.post(
+            'api/v1/menus',
+            data=self.data(),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn(b'name is already taken', res.data)
+
     def test_can_get_menu(self):
         json_res = self.create_menu(self.data())
         res = self.client.get(
@@ -67,6 +77,37 @@ class TestMenu(BaseTest):
         )
         self.assertEqual(res.status_code, 404)
         self.assertIn(b'not found', res.data)
+
+    def test_can_update_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.put(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            data=self.data_with({'name': 'Supper'}),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Menu successfully updated', res.data)
+
+    def test_can_update_menu_with_same_data(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.put(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            data=self.data_with({'name': 'Lunch'}),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Menu successfully updated', res.data)
+
+    def test_cannot_update_menu_without_unique_name(self):
+        self.create_menu(self.data_with({'name': 'Lunch'}))
+        json_res = self.create_menu(self.data_with({'name': 'Breakfast'}))
+        res = self.client.put(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            data=self.data_with({'name': 'Lunch'}),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 400)
+        self.assertIn(b'must be unique', res.data)
 
     def create_menu(self, data):
         res = self.client.post(
