@@ -1,7 +1,7 @@
 # Book A Meal API :pizza:
-[![Build Status](https://travis-ci.org/codingedward/book-a-meal-api.svg?branch=develop)](https://travis-ci.org/codingedward/book-a-meal)
-[![Codacy Badge](https://api.codacy.com/project/badge/Grade/49c7aa4533664706889b54e1254a4b6f?branch=develop)](https://www.codacy.com/app/codingedward/book-a-meal-api?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=codingedward/book-a-meal&amp;utm_campaign=Badge_Grade)
-[![Coverage Status](https://coveralls.io/repos/github/codingedward/book-a-meal/badge.svg?branch=develop)](https://coveralls.io/github/codingedward/book-a-meal-api?branch=develop)
+[![Build Status](https://travis-ci.org/codingedward/book-a-meal-api.svg?branch=develop)](https://travis-ci.org/codingedward/book-a-meal-api)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b0f05a1e373245888571eaf391637342?branch=develop)](https://www.codacy.com/app/codingedward/book-a-meal-api?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=codingedward/book-a-meal-api&amp;utm_campaign=Badge_Grade)
+[![Coverage Status](https://coveralls.io/repos/github/codingedward/book-a-meal-api/badge.svg?branch=develop)](https://coveralls.io/github/codingedward/book-a-meal-api?branch=develop)
 
 This is the Andela Book-A-Meal web project challenge API.
 
