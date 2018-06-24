@@ -15,6 +15,8 @@ from app.blueprints.auth import auth
 from app.exceptions import handler
 from app.resources.meals import MealResource, MealListResource
 from app.resources.menu import MenuResource, MenuListResource
+from app.resources.menu_items import MenuItemResource, MenuItemListResource
+#from app.resources.notifications import NotificationResource, NotificationListResource
 
 
 def create_app(config_name):
@@ -30,12 +32,14 @@ def create_app(config_name):
     jwt = JWTManager(app)
     api = Api(app, prefix='/api/v1')
 
-    # register blueprints
+    # register endpoints
     app.register_blueprint(auth)
     api.add_resource(MealResource, '/meals/<int:meal_id>')
     api.add_resource(MealListResource, '/meals')
     api.add_resource(MenuResource, '/menus/<int:menu_id>')
     api.add_resource(MenuListResource, '/menus')
+    api.add_resource(MenuItemResource, '/menu-items/<int:menu_item_id>')
+    api.add_resource(MenuItemListResource, '/menu-items')
 
     # initialize the database
     db.init_app(app)
