@@ -13,13 +13,6 @@ class UserType:
     USER = 2
 
 
-class MenuType:
-    """Menu categories"""
-    BREAKFAST = 1
-    LUNCH = 2
-    SUPPER = 3
-
-
 class BaseModel:
     """This will handle saving and deletion of models"""
 
@@ -172,10 +165,10 @@ class Menu(db.Model, BaseModel):
     """Holds the menus"""
 
     __tablename__ = 'menus'
-    _fields = ['category']
+    _fields = ['name']
 
     id = db.Column(db.Integer, primary_key=True)
-    category = db.Column(db.Integer)
+    name = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
@@ -183,9 +176,9 @@ class Menu(db.Model, BaseModel):
         onupdate=db.func.current_timestamp()
     )
 
-    def __init__(self, category=None):
+    def __init__(self, name=None):
         """Initialize the menu"""
-        self.category = category
+        self.name = name
 
 
 class MenuItem(db.Model, BaseModel):
