@@ -68,7 +68,6 @@ class TestMenu(BaseTest):
         self.assertEqual(res.status_code, 404)
         self.assertIn(b'not found', res.data)
 
-
     def create_menu(self, data):
         res = self.client.post(
             'api/v1/menus',
@@ -79,4 +78,7 @@ class TestMenu(BaseTest):
         self.assertIn(b'Successfully saved menu', res.data)
         return self.to_json(res)
 
+    def tearDown(self):
+        with self.app.app_context():
+            db.drop_all()
 
