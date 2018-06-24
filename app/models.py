@@ -4,7 +4,7 @@
 import json
 from app import db
 from passlib.hash import bcrypt
-from datetime import datetime
+from datetime import datetime, date
 
 
 class UserType:
@@ -91,7 +91,7 @@ class BaseModel:
             # as long as it is not hidden feed it...
             if field not in self._hidden:
                 value = getattr(self, field)
-                if isinstance(value, datetime):
+                if isinstance(value, datetime) or isinstance(value, date):
                     dict_repr[field] =  str(value)
                 else:
                     dict_repr[field] = value
