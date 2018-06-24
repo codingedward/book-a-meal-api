@@ -32,8 +32,7 @@ The customers, after signing up first, are then allowed to book meals online.
 This application uses Flask Python web microframework to create a RESTful 
 API.
 
-**Note**: The documentation for the API is 
-[here](https://mealbooking.docs.apiary.io).
+**Note**: The documentation for the API is [here](https://mealbooking.docs.apiary.io).
 
 ### Installation
 
