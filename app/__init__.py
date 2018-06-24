@@ -34,7 +34,7 @@ def create_app(config_name):
     app.register_blueprint(auth)
     api.add_resource(MealResource, '/meals/<int:meal_id>')
     api.add_resource(MealListResource, '/meals')
-    api.add_resource(MenuResource, '/menus/<int:meal_id>')
+    api.add_resource(MenuResource, '/menus/<int:menu_id>')
     api.add_resource(MenuListResource, '/menus')
 
     # initialize the database
