@@ -36,6 +36,15 @@ class TestMenu(BaseTest):
         self.assertIn(b'name field is required', res.data)
 
     def test_can_get_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.get(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Lunch', res.data)
+
+    def test_can_get_all_menus(self):
         self.create_menu(self.data())
         res = self.client.get(
             'api/v1/menus',
@@ -43,6 +52,21 @@ class TestMenu(BaseTest):
         )
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Lunch', res.data)
+
+    def test_can_delete_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.delete(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Menu successfully deleted', res.data)
+        res = self.client.get(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'not found', res.data)
 
 
     def create_menu(self, data):
@@ -53,5 +77,6 @@ class TestMenu(BaseTest):
         )
         self.assertEqual(res.status_code, 201)
         self.assertIn(b'Successfully saved menu', res.data)
+        return self.to_json(res)
 
 
