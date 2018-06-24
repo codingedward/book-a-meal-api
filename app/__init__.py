@@ -14,6 +14,7 @@ db = SQLAlchemy()
 from app.blueprints.auth import auth
 from app.exceptions import handler
 from app.resources.meals import MealResource, MealListResource
+from app.resources.menu import MenuResource, MenuListResource
 
 
 def create_app(config_name):
@@ -31,9 +32,10 @@ def create_app(config_name):
 
     # register blueprints
     app.register_blueprint(auth)
-
     api.add_resource(MealResource, '/meals/<int:meal_id>')
     api.add_resource(MealListResource, '/meals')
+    api.add_resource(MenuResource, '/menus/<int:meal_id>')
+    api.add_resource(MenuListResource, '/menus')
 
     # initialize the database
     db.init_app(app)
