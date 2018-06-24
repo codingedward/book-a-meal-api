@@ -81,7 +81,7 @@ class MenuListResource(Resource):
         resp = Menu.paginate()
         resp['menus'] = resp['data']
         resp['message'] = 'Successfully retrieved menus'
-        resp['success'] = True,
+        resp['success'] = True
         return resp
 
     @admin_auth

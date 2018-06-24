@@ -81,7 +81,7 @@ class MealListResource(Resource):
         resp = Meal.paginate()
         resp['meals'] = resp['data']
         resp['message'] = 'Successfully retrieved meals'
-        resp['success'] = True,
+        resp['success'] = True
         return resp
 
     @admin_auth
