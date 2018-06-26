@@ -7,7 +7,6 @@ from app.middlewares.auth import user_auth, admin_auth
 
 
 class MenuItemResource(Resource):
-
     @user_auth
     def get(self, menu_item_id):
         # exists? ...
@@ -41,8 +40,8 @@ class MenuItemResource(Resource):
         menu_id = request.json.get('menu_id') or menu_item.menu_id
 
         # check if another menu item exists with same values
-        existing = MenuItem.query.filter_by(meal_id=meal_id,
-                                            menu_id=menu_id).first()
+        existing = MenuItem.query.filter_by(
+            meal_id=meal_id, menu_id=menu_id).first()
         if existing and existing.id != menu_item_id:
             return {
                 'success': False,
@@ -80,7 +79,12 @@ class MenuItemResource(Resource):
 class MenuItemListResource(Resource):
     @user_auth
     def get(self):
-        resp = MenuItem.paginate()
+
+        # check if we need history...
+        valid = ['true', '1', 'on']
+        history = request.args.get('history') or ''
+
+        resp = MenuItem.paginate(history=(history.lower() in valid))
         resp['menu_items'] = resp['data']
         resp['message'] = 'Successfully retrieved menu items.'
         resp['success'] = True
@@ -93,9 +97,9 @@ class MenuItemListResource(Resource):
         # ensure uniqueness
         meal_id = request.json['meal_id']
         menu_id = request.json['menu_id']
-        menu_item = MenuItem.query.filter_by(meal_id=meal_id, 
-                                             menu_id=menu_id).first()
-        if menu_item: 
+        menu_item = MenuItem.query.filter_by(
+            meal_id=meal_id, menu_id=menu_id).first()
+        if menu_item:
             return {
                 'success': False,
                 'message': 'Validation error.',
@@ -110,4 +114,3 @@ class MenuItemListResource(Resource):
             'message': 'Successfully saved menu item.',
             'menu_item': menu_item.to_dict()
         }, 201
-
