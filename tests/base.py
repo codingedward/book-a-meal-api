@@ -52,10 +52,10 @@ class BaseTest(unittest.TestCase):
                 without[field] = value
         return json.dumps(without)
 
-    def to_json(self, res):
+    def to_dict(self, res):
         return json.loads(res.get_data(as_text=True))
 
-    def to_dict(self, json_res):
+    def to_json(self, json_res):
         return json.dumps(json_res)
 
     def _createUser(self, email, role):
@@ -64,14 +64,10 @@ class BaseTest(unittest.TestCase):
             user = User.query.filter_by(email=email).first()
             if not user:
                 user = User(
-                    username='John',
-                    email=email, 
-                    password='secret',
-                    role=role
-                )
+                    username='John', email=email, password='secret', role=role)
                 user.save()
             return user.to_dict()
-        
+
     def _authenticate(self, user):
         """Authenticates a user and returns the auth headers"""
         res = self.client.post(
@@ -80,11 +76,9 @@ class BaseTest(unittest.TestCase):
                 'email': user['email'],
                 'password': 'secret'
             }),
-            headers={'Content-Type' : 'application/json'}
-        )
+            headers={'Content-Type': 'application/json'})
         result = json.loads(res.get_data(as_text=True))
         return {
-            'Content-Type' : 'application/json',
+            'Content-Type': 'application/json',
             'Authorization': 'Bearer {}'.format(result['data']['access_token'])
         }
-
