@@ -2,7 +2,6 @@
 
 import json
 from app import db
-from flask import request
 from passlib.hash import bcrypt
 from datetime import datetime, date
 
@@ -204,9 +203,9 @@ class MenuItem(db.Model, BaseModel):
         'Meal', backref=db.backref('menu_items', lazy='dynamic'))
 
     @classmethod
-    def paginate(cls):
+    def paginate(cls, with_history=None):
         pg = None
-        if request.args.get('history') == 1:
+        if with_history == 1:
             pg = cls.query.paginate(error_out=False)
         else:
             pg = cls.query.filter(cls.day == date.today()).paginate(
