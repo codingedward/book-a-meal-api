@@ -7,7 +7,6 @@ from app.middlewares.auth import user_auth, admin_auth
 
 
 class MealResource(Resource):
-
     @user_auth
     def get(self, meal_id):
         # exists? ...
@@ -27,21 +26,6 @@ class MealResource(Resource):
     @admin_auth
     @validate(PutRequest)
     def put(self, meal_id):
-
-        # check if another meal exists with new name...
-        if request.json.get('name'):
-            name = request.json['name']
-            meal = Meal.query.filter_by(name=name).first()
-            if meal and meal.name.lower() == name.lower() and \
-                    meal.id != meal_id:
-                return {
-                    'success': False,
-                    'message': 'Validation error.',
-                    'errors': {
-                        'name': ['Meal name must be unique.']
-                    }
-                }, 404
-
         # check exists? ...
         meal = Meal.query.get(meal_id)
         if not meal:
@@ -49,6 +33,20 @@ class MealResource(Resource):
                 'success': False,
                 'message': 'Meal not found',
             }, 404
+
+        # check if another meal exists with new name...
+        if request.json.get('name'):
+            name = request.json['name']
+            new_meal = Meal.query.filter_by(name=name).first()
+            if new_meal and new_meal.name.lower() == name.lower() and \
+                    new_meal.id != meal_id:
+                return {
+                    'success': False,
+                    'message': 'Validation error.',
+                    'errors': {
+                        'name': ['Meal name must be unique.']
+                    }
+                }, 400
 
         # now update...
         meal.update(request.json)
@@ -93,4 +91,3 @@ class MealListResource(Resource):
             'message': 'Successfully saved meal.',
             'meal': meal.to_dict()
         }, 201
-
