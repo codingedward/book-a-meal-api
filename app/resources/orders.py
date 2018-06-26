@@ -110,7 +110,8 @@ class OrderResource(Resource):
 class OrderListResource(Resource):
     @user_auth
     def get(self):
-        resp = Order.paginate()
+        history = request.args.get('history') == 1
+        resp = Order.paginate(with_history=history)
         resp['orders'] = resp['data']
         resp['message'] = 'Successfully retrieved orders.'
         resp['success'] = True
