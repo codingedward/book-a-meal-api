@@ -58,10 +58,19 @@ class TestMenu(BaseTest):
         self.create_menu(self.data())
         res = self.client.get(
             'api/v1/menus',
-            headers=self.admin_headers
+            headers=self.user_headers
         )
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Lunch', res.data)
+
+    def test_cannot_get_nonexistant_menu(self):
+        self.create_menu(self.data())
+        res = self.client.get(
+            'api/v1/menus/1000',
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Menu not found', res.data)
 
     def test_can_delete_menu(self):
         json_res = self.create_menu(self.data())
@@ -78,6 +87,15 @@ class TestMenu(BaseTest):
         self.assertEqual(res.status_code, 404)
         self.assertIn(b'not found', res.data)
 
+    def test_cannot_delete_nonexistant_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.delete(
+            'api/v1/menus/1000',
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Menu not found', res.data)
+
     def test_can_update_menu(self):
         json_res = self.create_menu(self.data())
         res = self.client.put(
@@ -87,6 +105,26 @@ class TestMenu(BaseTest):
         )
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Menu successfully updated', res.data)
+
+    def test_user_cannot_update_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.put(
+            'api/v1/menus/{}'.format(json_res['menu']['id']),
+            data=self.data_with({'name': 'Supper'}),
+            headers=self.user_headers
+        )
+        self.assertEqual(res.status_code, 401)
+        self.assertIn(b'Unauthorized access', res.data)
+
+    def test_cannot_update_nonexistant_menu(self):
+        json_res = self.create_menu(self.data())
+        res = self.client.put(
+            'api/v1/menus/1000',
+            data=self.data_with({'name': 'Supper'}),
+            headers=self.admin_headers
+        )
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Menu not found', res.data)
 
     def test_can_update_menu_with_same_data(self):
         json_res = self.create_menu(self.data())
