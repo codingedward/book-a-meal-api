@@ -115,6 +115,13 @@ class MenuItemTests(BaseTest):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'successfully retrieved', res.data)
 
+    def test_can_get_many_menu_items_history(self):
+        self.create_menu_item(self.data())
+        res = self.client.get(
+            'api/v1/menu-items?history=1', headers=self.user_headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Successfully retrieved', res.data)
+
     def test_can_get_many_menu_items(self):
         self.create_menu_item(self.data())
         res = self.client.get('api/v1/menu-items', headers=self.user_headers)
