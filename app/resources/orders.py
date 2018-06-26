@@ -1,4 +1,5 @@
 from flask import request
+from datetime import date
 from flask_restful import Resource
 from app.validation import validate
 from app.models import Order, MenuItem
@@ -110,8 +111,19 @@ class OrderResource(Resource):
 class OrderListResource(Resource):
     @user_auth
     def get(self):
-        history = request.args.get('history') == 1
-        resp = Order.paginate(with_history=history)
+
+        # check if we need history...
+        valid = ['true', '1', 'on']
+        history = request.args.get('history') or ''
+        has_history = history.lower() in valid
+
+        # user should see his/her orders only...
+        user = current_user()
+        if not user.is_caterer():
+            resp = Order.paginate(history=has_history)
+        else:
+            resp = Order.paginate(history=has_history, user_id=user.id)
+
         resp['orders'] = resp['data']
         resp['message'] = 'Successfully retrieved orders.'
         resp['success'] = True
