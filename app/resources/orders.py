@@ -8,7 +8,6 @@ from app.utils import current_user
 
 
 class OrderResource(Resource):
-
     @user_auth
     def get(self, order_id):
         # exists? ...
@@ -52,8 +51,7 @@ class OrderResource(Resource):
             message = None
             if menu_item.quantity > 0:
                 message = 'Only {} more meals are available.'.format(
-                    menu_item.quantity
-                )
+                    menu_item.quantity)
             else:
                 message = 'No more orders can be made on this meal.'
 
@@ -66,9 +64,8 @@ class OrderResource(Resource):
             }, 400
 
         # set the new quantity...
-        menu_item.quantity = (menu_item.quantity 
-                              - request.json['quantity'] 
-                              + order.quantity)
+        menu_item.quantity = (
+            menu_item.quantity - request.json['quantity'] + order.quantity)
         menu_item.save()
 
         # update...
@@ -129,8 +126,7 @@ class OrderListResource(Resource):
             message = None
             if menu_item.quantity > 0:
                 message = 'Only {} meals are available.'.format(
-                    menu_item.quantity
-                )
+                    menu_item.quantity)
             else:
                 message = 'No more orders can be made on this meal.'
 
