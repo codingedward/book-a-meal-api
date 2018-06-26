@@ -77,6 +77,15 @@ class TestMeals(BaseTest):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'ugali', res.data)
 
+    def test_cannot_get_nonexistant_meal(self):
+        json_res = self.create_meal(self.data())
+        res = self.client.get(
+            'api/v1/meals/1000',
+            data=self.data(),
+            headers=self.user_headers)
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Meal not found', res.data)
+
     def test_can_update_meal(self):
         json_res = self.create_meal(self.data())
 
@@ -105,6 +114,24 @@ class TestMeals(BaseTest):
             headers=self.admin_headers)
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'beef', res.data)
+
+    def test_user_cannot_update_meal(self):
+        json_res = self.create_meal(self.data())
+        res = self.client.put(
+            'api/v1/meals/{}'.format(json_res['meal']['id']),
+            data=self.data(),
+            headers=self.user_headers)
+        self.assertEqual(res.status_code, 401)
+        self.assertIn(b'Unauthorized access', res.data)
+
+    def test_cannot_update_nonexistant_meal(self):
+        json_res = self.create_meal(self.data())
+        res = self.client.put(
+            'api/v1/meals/1000',
+            data=self.data(),
+            headers=self.admin_headers)
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Meal not found', res.data)
 
     def test_cannot_update_meal_without_unique_name(self):
         self.create_meal(self.data_with({'name': 'ugali'}))
@@ -138,6 +165,15 @@ class TestMeals(BaseTest):
             'api/v1/meals/{}'.format(json_res['meal']['id']),
             data=self.data(),
             headers=self.user_headers)
+        self.assertEqual(res.status_code, 404)
+        self.assertIn(b'Meal not found', res.data)
+
+    def test_cannot_delete_nonexistant_meal(self):
+        json_res = self.create_meal(self.data())
+        res = self.client.delete(
+            'api/v1/meals/1000',
+            data=self.data(),
+            headers=self.admin_headers)
         self.assertEqual(res.status_code, 404)
         self.assertIn(b'Meal not found', res.data)
 
