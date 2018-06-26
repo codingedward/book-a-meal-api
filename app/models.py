@@ -1,8 +1,8 @@
 """Contains the application's database models"""
 
-
 import json
 from app import db
+from flask import request
 from passlib.hash import bcrypt
 from datetime import datetime, date
 
@@ -14,7 +14,6 @@ class UserType:
 
 
 class BaseModel:
-    """This will handle saving and deletion of models"""
 
     _fields = []
     _hidden = []
@@ -51,7 +50,7 @@ class BaseModel:
                 'next_page': pg.next_num,
                 'prev_page': pg.prev_num,
             },
-            'data':[ inst.to_dict() for inst in pg.items ]
+            'data': [inst.to_dict() for inst in pg.items]
         }
 
     def from_dict(self, data):
@@ -83,7 +82,7 @@ class BaseModel:
             if created:
                 dict_repr['created_at'] = str(created)
             updated = getattr(self, 'updated_at')
-            if updated: 
+            if updated:
                 dict_repr['updated_at'] = str(updated)
 
         # for every field declared...
@@ -92,7 +91,7 @@ class BaseModel:
             if field not in self._hidden:
                 value = getattr(self, field)
                 if isinstance(value, datetime) or isinstance(value, date):
-                    dict_repr[field] =  str(value)
+                    dict_repr[field] = str(value)
                 else:
                     dict_repr[field] = value
         return dict_repr
@@ -132,8 +131,7 @@ class User(db.Model, BaseModel):
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     def __init__(self, username=None, email=None,\
                  password=None, role=UserType.USER):
@@ -173,8 +171,7 @@ class Menu(db.Model, BaseModel):
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     def __init__(self, name=None):
         """Initialize the menu"""
@@ -196,20 +193,36 @@ class MenuItem(db.Model, BaseModel):
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     # relationship with the menu
     menu = db.relationship(
-        'Menu',
-        backref=db.backref('menu_items', lazy='dynamic')
-    )
+        'Menu', backref=db.backref('menu_items', lazy='dynamic'))
 
     # relationship with the meal
     meal = db.relationship(
-        'Meal',
-        backref=db.backref('menu_items', lazy='dynamic')
-    )
+        'Meal', backref=db.backref('menu_items', lazy='dynamic'))
+
+    @classmethod
+    def paginate(cls):
+        pg = None
+        if request.args.get('history') == 1:
+            pg = cls.query.paginate(error_out=False)
+        else:
+            pg = cls.query.filter(cls.day == date.today()).paginate(
+                error_out=False)
+        return {
+            'meta': {
+                'pages': pg.pages,
+                'total': pg.total,
+                'has_next': pg.has_next,
+                'has_prev': pg.has_prev,
+                'per_page': pg.per_page,
+                'next_page': pg.next_num,
+                'prev_page': pg.prev_num,
+            },
+            'data': [inst.to_dict() for inst in pg.items]
+        }
 
     def __init__(self, menu_id=None, meal_id=None, quantity=1):
         """Initialize a meal item"""
@@ -232,8 +245,7 @@ class Meal(db.Model, BaseModel):
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     def __init__(self, name=None, cost=None, img_url=None):
         """Initialize a meal"""
@@ -251,23 +263,18 @@ class Order(db.Model, BaseModel):
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, default=1)
     menu_item_id = db.Column(
-        db.Integer,
-        db.ForeignKey('menu_items.id', ondelete='CASCADE')
-    )
+        db.Integer, db.ForeignKey('menu_items.id', ondelete='CASCADE'))
     user_id = db.Column(db.Integer,
                         db.ForeignKey('users.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     # relationship with the menu items
     menu_item = db.relationship(
-        'MenuItem',
-        backref=db.backref('orders', lazy='dynamic')
-    )
+        'MenuItem', backref=db.backref('orders', lazy='dynamic'))
 
     def __init__(self, menu_item_id=None, user_id=None, quantity=None):
         """Initialize the order"""
@@ -291,14 +298,11 @@ class Notification(db.Model, BaseModel):
     updated_at = db.Column(
         db.DateTime,
         default=db.func.current_timestamp(),
-        onupdate=db.func.current_timestamp()
-    )
+        onupdate=db.func.current_timestamp())
 
     # relationship with a user
     user = db.relationship(
-        'User',
-        backref=db.backref('notifications', lazy='dynamic')
-    )
+        'User', backref=db.backref('notifications', lazy='dynamic'))
 
     def __init__(self, title=None, message=None, user_id=None):
         """Initialize the notification"""
