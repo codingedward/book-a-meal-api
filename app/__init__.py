@@ -1,26 +1,23 @@
 """Creates and configures an application"""
 
-
 from flask import Flask
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from instance.config import app_config
 
-
 db = SQLAlchemy()
-
 
 from app.blueprints.auth import auth
 from app.exceptions import handler
 from app.resources.meals import MealResource, MealListResource
 from app.resources.menu import MenuResource, MenuListResource
 from app.resources.menu_items import MenuItemResource, MenuItemListResource
-#from app.resources.notifications import NotificationResource, NotificationListResource
+from app.resources.orders import OrderResource, OrderListResource
 
 
 def create_app(config_name):
-    """This will create the application and setup all the 
+    """This will create the application and setup all the
     other extensions"""
 
     # initialize flask and jwt
@@ -40,6 +37,8 @@ def create_app(config_name):
     api.add_resource(MenuListResource, '/menus')
     api.add_resource(MenuItemResource, '/menu-items/<int:menu_item_id>')
     api.add_resource(MenuItemListResource, '/menu-items')
+    api.add_resource(OrderResource, '/orders/<int:order_id>')
+    api.add_resource(OrderListResource, '/orders')
 
     # initialize the database
     db.init_app(app)
