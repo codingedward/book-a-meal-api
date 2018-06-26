@@ -40,7 +40,7 @@ class MealResource(Resource):
                     'errors': {
                         'name': ['Meal name must be unique.']
                     }
-                }, 400
+                }, 404
 
         # check exists? ...
         meal = Meal.query.get(meal_id)
