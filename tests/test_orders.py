@@ -108,6 +108,22 @@ class TestOrders(BaseTest):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Order successfully retrieved', res.data)
 
+    def test_can_get_many_orders(self):
+        json_res = self.create_order()
+        res = self.client.get(
+            'api/v1/orders',
+            headers=self.user_headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Successfully retrieved orders', res.data)
+
+    def test_can_get_many_orders_history(self):
+        json_res = self.create_order()
+        res = self.client.get(
+            'api/v1/orders?history=1',
+            headers=self.user_headers)
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Successfully retrieved orders', res.data)
+
     def test_can_delete_order(self):
         json_res = self.create_order()
         res = self.client.delete(
