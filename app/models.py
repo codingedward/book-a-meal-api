@@ -4,6 +4,7 @@ import json
 from app import db
 from passlib.hash import bcrypt
 from datetime import datetime, date
+from sqlalchemy import cast, DATE
 
 
 class UserType:
@@ -203,24 +204,25 @@ class MenuItem(db.Model, BaseModel):
         'Meal', backref=db.backref('menu_items', lazy='dynamic'))
 
     @classmethod
-    def paginate(cls, with_history=None):
+    def paginate(cls, history=None):
         pg = None
-        if with_history == 1:
-            pg = cls.query.paginate(error_out=False)
+        if history:
+            pg = cls.query.filter(cls.day < date.today())
         else:
-            pg = cls.query.filter(cls.day == date.today()).paginate(
-                error_out=False)
+            pg = cls.query.filter(cls.day == date.today())
+
+        result = pg.paginate(error_out=False)
         return {
             'meta': {
-                'pages': pg.pages,
-                'total': pg.total,
-                'has_next': pg.has_next,
-                'has_prev': pg.has_prev,
-                'per_page': pg.per_page,
-                'next_page': pg.next_num,
-                'prev_page': pg.prev_num,
+                'pages': result.pages,
+                'total': result.total,
+                'has_next': result.has_next,
+                'has_prev': result.has_prev,
+                'per_page': result.per_page,
+                'next_page': result.next_num,
+                'prev_page': result.prev_num,
             },
-            'data': [inst.to_dict() for inst in pg.items]
+            'data': [inst.to_dict() for inst in result.items]
         }
 
     def __init__(self, menu_id=None, meal_id=None, quantity=1):
@@ -274,6 +276,38 @@ class Order(db.Model, BaseModel):
     # relationship with the menu items
     menu_item = db.relationship(
         'MenuItem', backref=db.backref('orders', lazy='dynamic'))
+
+    @classmethod
+    def paginate(cls, history=None, user_id=None):
+        
+        # default query
+        pg = cls.query
+
+        # if we need user orders only...
+        if user_id:
+            pg = pg.filter(cls.user_id == user_id)
+
+        # history only, or current orders? ...
+        created_at = cast(cls.created_at, DATE) 
+        if history:
+            pg = pg.filter(created_at < date.today())
+        else:
+            pg = pg.filter(created_at == date.today())
+
+        # now paginate...
+        result = pg.paginate(error_out=False)
+        return {
+            'meta': {
+                'pages': result.pages,
+                'total': result.total,
+                'has_next': result.has_next,
+                'has_prev': result.has_prev,
+                'per_page': result.per_page,
+                'next_page': result.next_num,
+                'prev_page': result.prev_num,
+            },
+            'data': [inst.to_dict() for inst in result.items]
+        }
 
     def __init__(self, menu_item_id=None, user_id=None, quantity=None):
         """Initialize the order"""
