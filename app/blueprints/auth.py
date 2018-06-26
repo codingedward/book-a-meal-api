@@ -1,15 +1,12 @@
 """This handles user authentication"""
 
-
 from app.validation import validate
 from app.middlewares.auth import admin_auth, user_auth
 from app.models import User, Blacklist
 from flask import Blueprint, request, jsonify, make_response
-from flask_jwt_extended import (
-    create_access_token, get_jwt_identity, get_raw_jwt
-)
+from flask_jwt_extended import (create_access_token, get_jwt_identity,
+                                get_raw_jwt)
 from app.requests.auth import LoginRequest, RegisterRequest
-
 
 auth = Blueprint('auth', __name__)
 
@@ -17,10 +14,10 @@ auth = Blueprint('auth', __name__)
 @auth.route('/api/v1/auth/signup', methods=['POST'])
 @validate(RegisterRequest)
 def register():
-    """Register a user using their username, email and 
+    """Register a user using their username, email and
     password"""
     user = User.create(request.json)
-    return jsonify({ 
+    return jsonify({
         'success': True,
         'message': 'Successfully registered account.',
         'data': {
@@ -79,4 +76,3 @@ def logout():
         'success': True,
         'message': 'Successfully logged out.'
     }), 200
-
