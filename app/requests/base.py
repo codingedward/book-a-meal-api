@@ -17,7 +17,6 @@ class JsonRequest:
         )
 
     def validate(self):
-        str(self.validator.errors())
         if self.validator.fails():
             raise ValidationException(self.validator.errors())
 
