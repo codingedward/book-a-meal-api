@@ -117,7 +117,7 @@ class TestMenu(BaseTest):
         )
         self.assertEqual(res.status_code, 201)
         self.assertIn(b'Successfully saved menu', res.data)
-        return self.to_json(res)
+        return self.to_dict(res)
 
     def tearDown(self):
         with self.app.app_context():
