@@ -1,6 +1,6 @@
 """This handles user authentication"""
 
-from app.validation import validate
+from app.middlewares.validation import validate
 from app.middlewares.auth import admin_auth, user_auth
 from app.models import User, Blacklist
 from flask import Blueprint, request, jsonify, make_response
