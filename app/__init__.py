@@ -8,6 +8,7 @@ from instance.config import app_config
 
 db = SQLAlchemy()
 
+from app.mail import mail
 from app.blueprints.auth import auth
 from app.exceptions import handler
 from app.resources.meals import MealResource, MealListResource
@@ -46,5 +47,6 @@ def create_app(config_name):
     handler.init_app(app)
     # jwt blacklists handler
     handler.init_jwt(jwt)
-
+    # mail service
+    mail.init_app(app)
     return app
