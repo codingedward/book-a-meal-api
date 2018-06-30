@@ -249,12 +249,14 @@ class User(db.Model, BaseModel):
     def __init__(self,
                  username=None,
                  email=None,
+                 token=None,
                  password=None,
                  role=UserType.USER):
         """Initialize the user"""
         self.email = email
         self.role = role
         self.username = username
+        self.token = token
         if password:
             self.password = bcrypt.encrypt(password)
 
