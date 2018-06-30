@@ -5,7 +5,7 @@ class RegisterRequest(JsonRequest):
         return {
             'email': 'required|email|unique:User,email',
             'password': 'required|string|confirmed|least_string:6',
-            'username': 'required|string',
+            'username': 'required|alpha',
         }
 
 class LoginRequest(JsonRequest):
