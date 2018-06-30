@@ -2,7 +2,8 @@ from .base import JsonRequest
 
 
 class PostRequest(JsonRequest):
-    def rules(self):
+    @staticmethod
+    def rules():
         return {
             'quantity': 'required|integer|positive',
             'user_id': 'required|integer|positive|exists:User,id',
@@ -11,7 +12,8 @@ class PostRequest(JsonRequest):
 
 
 class PutRequest(JsonRequest):
-    def rules(self):
+    @staticmethod
+    def rules():
         return {
             'quantity': 'integer|positive',
             'menu_item_id': 'integer|positive|exists:MenuItem,id',
