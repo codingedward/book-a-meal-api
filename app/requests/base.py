@@ -8,6 +8,17 @@ class JsonRequest:
 
     @clean_json_request
     def __init__(self):
+
+        # ensure we only pass registered fields..
+        unrequired = []
+        rules = self.rules()
+        for field, values in request.json.items():
+            if field not in rules and not field.endswith('_confirmation'):
+                unrequired.append(field)
+
+        for field in unrequired:
+            del request.json[field]
+        
         self.validator = Validator(
             rules=self.rules(),
             request=request.json
@@ -17,5 +28,6 @@ class JsonRequest:
         if self.validator.fails():
             raise ValidationException(self.validator.errors())
 
-    def rules(self):
+    @staticmethod
+    def rules():
         return {}
