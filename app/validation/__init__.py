@@ -31,27 +31,14 @@ The rules supported include:
 27. required_if:another_field,value,...
 29. required_with:foo,bar,... - required if any of the other fields is 
     present
-31. required_without:foo,bar,... - required without any of the other fields
-33. same:field - the two fields must match
-34. size:value - for a string, this is the length, for numeric data, value
+30. required_without:foo,bar,... - required without any of the other fields
+31. same:field - the two fields must match
+32. size:value - for a string, this is the length, for numeric data, value
     is the integer value. 
-35. string - must be a string, empty strings are not allowed.
-36. unique:table,column,except,columnId - must be unique in the given 
+33. string - must be a string, empty strings are not allowed.
+34. unique:table,column,except,columnId - must be unique in the given 
     table's column except the given columnId
-37. url - field under validation must be a url
+35. url - field under validation must be a url
 """
 
-
-
-from functools import wraps
-
-
-def validate(Request):
-    def decorator(fn):
-        @wraps(fn)
-        def wrapper(*args, **kwargs):
-            req = Request()
-            req.validate()
-            return fn(*args, **kwargs)
-        return wrapper
-    return decorator
+from .validator import Validator
