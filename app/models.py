@@ -4,7 +4,7 @@ import json
 from app import db
 from passlib.hash import bcrypt
 from datetime import datetime, date
-from sqlalchemy import cast, DATE
+from sqlalchemy import cast, or_
 
 
 class UserType:
@@ -37,28 +37,6 @@ class BaseModel:
         self.save()
         return self
 
-    @classmethod
-    def paginate(cls):
-        pg = cls.query.paginate(error_out=False)
-        return {
-            'meta': {
-                'pages': pg.pages,
-                'total': pg.total,
-                'has_next': pg.has_next,
-                'has_prev': pg.has_prev,
-                'per_page': pg.per_page,
-                'next_page': pg.next_num,
-                'prev_page': pg.prev_num,
-            },
-            'data': [inst.to_dict() for inst in pg.items]
-        }
-
-    def from_dict(self, data):
-        for field in self._fields:
-            if field in data:
-                setattr(self, field, data[field])
-        return self
-
     def save(self):
         """Save current model"""
         db.session.add(self)
@@ -69,35 +47,148 @@ class BaseModel:
         db.session.delete(self)
         db.session.commit()
 
-    def to_dict(self):
+    @classmethod
+    def _apply_db_filters(cls, query, filters):
+        # if no filter query...
+        if not filters:
+            return query
+
+        if 'search' in filters:
+            # if the column has been specified...
+            if ':' in filters['search']:
+                # get column name and the value to match against
+                column, value = filters['search'].split(':')
+
+                # pattern to match against
+                pattern = '%{}%'.format(value)
+                try:
+                    # cast to compare as string
+                    column = cast(getattr(cls, column), db.String)
+                    # now make the filter
+                    query = query.filter(column.ilike(pattern))
+                except AttributeError:
+                    pass
+            else:
+                # comparison rules
+                predicates = []
+
+                # pattern to match against
+                pattern = '%{}%'.format(filters['search'])
+
+                # for all columns in this model...
+                for column in cls._fields:
+                    # cast this column to compare as string
+                    column = cast(getattr(cls, column), db.String)
+                    # add comparsion rule
+                    predicates.append(column.ilike(pattern))
+
+                # unpack all comparison rules using *or* rule
+                query = query.filter(or_(*predicates))
+
+        return query
+
+    @classmethod
+    def _apply_data_filters(cls, items, filters):
+        if not filters:
+            return [item.to_dict() for item in items]
+
+        if 'fields' in filters:
+            fields = filters['fields'].split(',')
+            dict_items = [item.to_dict(fields=fields) for item in items]
+        else:
+            dict_items = [item.to_dict() for item in items]
+
+        if 'related' in filters:
+            # split the required related models
+            related_models = filters['related'].split('|')
+
+            # for all request models...
+            for model in related_models:
+                # if relation fields are specified...
+                if ':' in model:
+                    # get relation name and required fields
+                    model_name, fields = model.split(':')
+                    fields = fields.split(',')
+                else:
+                    model_name = model
+
+                for item, dict_item in zip(items, dict_items):
+                    try:
+                        dict_item[model_name] = getattr(
+                            item, model_name).to_dict(fields=fields)
+                    except AttributeError:
+                        break
+        return dict_items
+
+    @classmethod
+    def paginate(cls, filters=None, query=None, name='data'):
+        # default query passed?
+        if not query:
+            query = cls.query
+
+        # query with filters
+        query = cls._apply_db_filters(query, filters)
+        paginated = query.paginate(error_out=False)
+        return {
+            'pages': paginated.pages,
+            'total': paginated.total,
+            'has_next': paginated.has_next,
+            'has_prev': paginated.has_prev,
+            'per_page': paginated.per_page,
+            'next_page': paginated.next_num,
+            'prev_page': paginated.prev_num,
+            name: cls._apply_data_filters(paginated.items, filters)
+        }
+
+    def from_dict(self, data):
+        for field in self._fields:
+            if field in data:
+                setattr(self, field, data[field])
+        return self
+
+    def to_dict(self, fields=None):
         dict_repr = {}
 
-        # check if has id
-        if getattr(self, 'id'):
-            dict_repr['id'] = self.id
+        # if no fields specified, include all..
+        if not fields or len(fields) == 0:
+            fields = self._fields
+            fields.extend(['id', 'created_at', 'updated_at'])
 
-        # check if timestamps enabled and feed the dict
+        if 'id' in fields:
+            try:
+                dict_repr['id'] = getattr(self, 'id')
+            except AttributeError:
+                pass
+
+        # check if timestamps enabled and feed the results
         if self._timestamps:
-            created = getattr(self, 'created_at')
-            if created:
-                dict_repr['created_at'] = str(created)
-            updated = getattr(self, 'updated_at')
-            if updated:
-                dict_repr['updated_at'] = str(updated)
+            if 'created_at' in fields:
+                try:
+                    dict_repr['created_at'] = str(getattr(self, 'created_at'))
+                except AttributeError:
+                    pass
+            if 'updated_at' in fields:
+                try:
+                    dict_repr['updated_at'] = str(getattr(self, 'updated_at'))
+                except AttributeError:
+                    pass
 
         # for every field declared...
-        for field in self._fields:
-            # as long as it is not hidden feed it...
+        for field in fields:
+            # if field is not hidden...
             if field not in self._hidden:
-                value = getattr(self, field)
+                try:
+                    value = getattr(self, field)
+                except AttributeError:
+                    continue
                 if isinstance(value, datetime) or isinstance(value, date):
                     dict_repr[field] = str(value)
                 else:
                     dict_repr[field] = value
         return dict_repr
 
-    def to_json(self):
-        return json.dumps(self.to_dict())
+    def to_json(self, fields=None):
+        return json.dumps(self.to_dict(fields=include))
 
 
 class Blacklist(db.Model, BaseModel):
@@ -115,17 +206,39 @@ class Blacklist(db.Model, BaseModel):
         self.token = token
 
 
+class PasswordReset(db.Model, BaseModel):
+    """Holds tokens for requested password resets"""
+
+    __tablename__ = 'password_resets'
+    _fields = ['token', 'user_id']
+
+    id = db.Column(db.Integer, primary_key=True)
+    user_id = db.Column(db.Integer,
+                        db.ForeignKey('users.id', ondelete='CASCADE'))
+    token = db.Column(db.String(500))
+    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
+
+    user = db.relationship(
+        'User', backref=db.backref('password_resets', lazy='dynamic'))
+
+    def __init__(self, token=None, user_id=None):
+        """Initialiaze the blacklist record"""
+        self.token = token
+        self.user_id = user_id
+
+
 class User(db.Model, BaseModel):
     """This will have application's users details"""
 
     __tablename__ = 'users'
-    _hidden = ['password']
-    _fields = ['username', 'email', 'password', 'role']
+    _hidden = ['password', 'token']
+    _fields = ['username', 'email', 'password', 'token', 'role']
 
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(255))
     email = db.Column(db.String(1024), unique=True)
     password = db.Column(db.String(300))
+    token = db.Column(db.String(1024))
     role = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
@@ -133,8 +246,11 @@ class User(db.Model, BaseModel):
         default=db.func.current_timestamp(),
         onupdate=db.func.current_timestamp())
 
-    def __init__(self, username=None, email=None,\
-                 password=None, role=UserType.USER):
+    def __init__(self,
+                 username=None,
+                 email=None,
+                 password=None,
+                 role=UserType.USER):
         """Initialize the user"""
         self.email = email
         self.role = role
@@ -177,6 +293,50 @@ class Menu(db.Model, BaseModel):
         """Initialize the menu"""
         self.name = name
 
+    @classmethod
+    def _apply_data_filters(cls, items, filters):
+        # first apply default filters
+        dict_items = BaseModel._apply_data_filters(items, filters)
+
+        # compare as dates
+        timestamp = cast(cls.created_at, db.DATE)
+
+        date_filter = None
+        # time specified for menu items
+        if filters and 'time' in filters:
+            time = filters['time']
+            # history menu items...
+            if time == 'history':
+                date_filter = timestamp < date.today()
+
+            # today's menu items...
+            elif time == 'today':
+                date_filter = timestamp == date.today()
+
+            # menu items date specified...
+            elif time != 'all':
+                from app.utils import str_to_date
+                time = str_to_date(time)
+                if time is not None:
+                    date_filter = timestamp == time
+
+        # default is today's
+        else:
+            date_filter = timestamp == date.today()
+
+        # for every menu, feed menu items...
+        for item, dict_item in zip(items, dict_items):
+            if date_filter is not None:
+                menu_items = item.menu_items.filter(date_filter).all()
+            else:
+                menu_items = item.menu_items.all()
+
+            dict_item['meals'] = [
+                menu_item.meal.to_dict() for menu_item in menu_items
+            ]
+
+        return dict_items
+
 
 class MenuItem(db.Model, BaseModel):
     """Holds the menu item of the application"""
@@ -202,28 +362,6 @@ class MenuItem(db.Model, BaseModel):
     # relationship with the meal
     meal = db.relationship(
         'Meal', backref=db.backref('menu_items', lazy='dynamic'))
-
-    @classmethod
-    def paginate(cls, history=None):
-        pg = None
-        if history:
-            pg = cls.query.filter(cls.day < date.today())
-        else:
-            pg = cls.query.filter(cls.day == date.today())
-
-        result = pg.paginate(error_out=False)
-        return {
-            'meta': {
-                'pages': result.pages,
-                'total': result.total,
-                'has_next': result.has_next,
-                'has_prev': result.has_prev,
-                'per_page': result.per_page,
-                'next_page': result.next_num,
-                'prev_page': result.prev_num,
-            },
-            'data': [inst.to_dict() for inst in result.items]
-        }
 
     def __init__(self, menu_id=None, meal_id=None, quantity=1):
         """Initialize a meal item"""
@@ -277,37 +415,45 @@ class Order(db.Model, BaseModel):
     menu_item = db.relationship(
         'MenuItem', backref=db.backref('orders', lazy='dynamic'))
 
+    user = db.relationship(
+        'User', backref=db.backref('orders', lazy='dynamic'))
+
     @classmethod
-    def paginate(cls, history=None, user_id=None):
-        
-        # default query
-        pg = cls.query
+    def _apply_db_filters(cls, query, fields):
+        query = BaseModel._apply_db_filters(query, fields)
+        # time specified for orders
+        if 'time' in filters:
+            time = filters['time']
+            # compare as dates
+            timestamp = cast(cls.created_at, db.DATE)
 
-        # if we need user orders only...
+            # order history...
+            if time == 'history':
+                query = query.filter(timestamp < date.today())
+
+            # today's orders...
+            elif time == 'today':
+                query = query.filter(timestamp == date.today())
+
+            # no filter for all orders...
+            elif time == 'all':
+                pass
+
+            # orders date specified...
+            else:
+                from app.utils import str_to_date
+                time = str_to_date(time)
+                if time:
+                    query = query.filter(timestamp == time)
+        return query
+
+    @classmethod
+    def paginate(cls, filters=None, query=None, user_id=None, name='data'):
+        # if user orders specified...
+        query = cls.query
         if user_id:
-            pg = pg.filter(cls.user_id == user_id)
-
-        # history only, or current orders? ...
-        created_at = cast(cls.created_at, DATE) 
-        if history:
-            pg = pg.filter(created_at < date.today())
-        else:
-            pg = pg.filter(created_at == date.today())
-
-        # now paginate...
-        result = pg.paginate(error_out=False)
-        return {
-            'meta': {
-                'pages': result.pages,
-                'total': result.total,
-                'has_next': result.has_next,
-                'has_prev': result.has_prev,
-                'per_page': result.per_page,
-                'next_page': result.next_num,
-                'prev_page': result.prev_num,
-            },
-            'data': [inst.to_dict() for inst in result.items]
-        }
+            query = query.filter(cls.user_id == user_id)
+        return BaseModel.paginate(filters=filters, query=query, name=name)
 
     def __init__(self, menu_item_id=None, user_id=None, quantity=None):
         """Initialize the order"""
