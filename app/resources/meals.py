@@ -1,9 +1,10 @@
 from flask import request
 from app.models import Meal
 from flask_restful import Resource
-from app.validation import validate
 from app.requests.meals import PostRequest, PutRequest
+from app.middlewares.validation import validate
 from app.middlewares.auth import user_auth, admin_auth
+from app.utils import decoded_qs
 
 
 class MealResource(Resource):
@@ -11,6 +12,7 @@ class MealResource(Resource):
     def get(self, meal_id):
         # exists? ...
         meal = Meal.query.get(meal_id)
+
         if not meal:
             return {
                 'success': False,
@@ -20,7 +22,7 @@ class MealResource(Resource):
         return {
             'success': True,
             'message': 'Meal successfully retrieved.',
-            'meal': meal.to_dict()
+            'meal': meal.to_dict(fields=request.args.get('fields'))
         }
 
     @admin_auth
@@ -53,7 +55,7 @@ class MealResource(Resource):
         return {
             'success': True,
             'message': 'Meal successfully updated.',
-            'meal': meal.to_dict()
+            'meal': meal.to_dict(fields=request.args.get('fields'))
         }
 
     @admin_auth
@@ -76,8 +78,10 @@ class MealResource(Resource):
 class MealListResource(Resource):
     @user_auth
     def get(self):
-        resp = Meal.paginate()
-        resp['meals'] = resp['data']
+        resp = Meal.paginate(
+            filters=decoded_qs(),
+            name='meals'
+        )
         resp['message'] = 'Successfully retrieved meals.'
         resp['success'] = True
         return resp
@@ -89,5 +93,5 @@ class MealListResource(Resource):
         return {
             'success': True,
             'message': 'Successfully saved meal.',
-            'meal': meal.to_dict()
+            'meal': meal.to_dict(fields=request.args.get('fields'))
         }, 201

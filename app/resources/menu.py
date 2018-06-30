@@ -1,9 +1,10 @@
 from flask import request
 from app.models import Menu
 from flask_restful import Resource
-from app.validation import validate
 from app.requests.menu import PostRequest, PutRequest
 from app.middlewares.auth import user_auth, admin_auth
+from app.middlewares.validation import validate
+from app.utils import decoded_qs
 
 
 class MenuResource(Resource):
@@ -78,8 +79,10 @@ class MenuResource(Resource):
 class MenuListResource(Resource):
     @user_auth
     def get(self):
-        resp = Menu.paginate()
-        resp['menus'] = resp['data']
+        resp = Menu.paginate(
+            filters=decoded_qs(),
+            name='menus'
+        )
         resp['message'] = 'Successfully retrieved menus.'
         resp['success'] = True
         return resp

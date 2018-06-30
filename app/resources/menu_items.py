@@ -1,9 +1,10 @@
 from flask import request
 from app.models import MenuItem
 from flask_restful import Resource
-from app.validation import validate
 from app.requests.menu_items import PostRequest, PutRequest
 from app.middlewares.auth import user_auth, admin_auth
+from app.middlewares.validation import validate
+from app.utils import decoded_qs
 
 
 class MenuItemResource(Resource):
@@ -79,13 +80,10 @@ class MenuItemResource(Resource):
 class MenuItemListResource(Resource):
     @user_auth
     def get(self):
-
-        # check if we need history...
-        valid = ['true', '1', 'on']
-        history = request.args.get('history') or ''
-
-        resp = MenuItem.paginate(history=(history.lower() in valid))
-        resp['menu_items'] = resp['data']
+        resp = MenuItem.paginate(
+            filters=decoded_qs(),
+            name='menu_items'
+        )
         resp['message'] = 'Successfully retrieved menu items.'
         resp['success'] = True
         return resp

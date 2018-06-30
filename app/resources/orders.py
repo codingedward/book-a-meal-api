@@ -1,11 +1,12 @@
 from flask import request
 from datetime import date
 from flask_restful import Resource
-from app.validation import validate
 from app.models import Order, MenuItem
 from app.requests.orders import PostRequest, PutRequest
 from app.middlewares.auth import user_auth, admin_auth
 from app.utils import current_user
+from app.middlewares.validation import validate
+from app.utils import decoded_qs
 
 
 class OrderResource(Resource):
@@ -112,19 +113,18 @@ class OrderListResource(Resource):
     @user_auth
     def get(self):
 
-        # check if we need history...
-        valid = ['true', '1', 'on']
-        history = request.args.get('history') or ''
-        has_history = history.lower() in valid
-
         # user should see his/her orders only...
         user = current_user()
-        if not user.is_caterer():
-            resp = Order.paginate(history=has_history)
+        if user.is_caterer():
+            user_id = None
         else:
-            resp = Order.paginate(history=has_history, user_id=user.id)
+            user_id = user.id
 
-        resp['orders'] = resp['data']
+        resp = Order.paginate(
+            filters=decoded_qs(),
+            user_id=user_id,
+            name='orders'
+        )
         resp['message'] = 'Successfully retrieved orders.'
         resp['success'] = True
         return resp
@@ -132,6 +132,14 @@ class OrderListResource(Resource):
     @user_auth
     @validate(PostRequest)
     def post(self):
+
+        user = current_user()
+        if not user.is_caterer() and user.id != request.json['user_id']:
+            return {
+                'success': False,
+                'message': 'Unauthorized to create this order.'
+            }, 401
+
 
         # check we have enough quantity...
         menu_item = MenuItem.query.get(request.json['menu_item_id'])
