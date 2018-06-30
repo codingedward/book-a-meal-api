@@ -21,7 +21,8 @@ def seed():
         username=os.getenv('DEFAULT_ADMIN_USERNAME'),
         email=os.getenv('DEFAULT_ADMIN_EMAIL'),
         password=os.getenv('DEFAULT_ADMIN_PASSWORD'),
-        role=UserType.CATERER
+        role=UserType.ADMIN,
+        token=''
     )
     user.save()
     print('manager: seed complete')
