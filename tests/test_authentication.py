@@ -105,7 +105,7 @@ class AuthenticationTestCase(BaseTest):
             headers=self.headers
         )
         self.assertEqual(res.status_code, 400)
-        self.assertIn(b'username must be a string', res.data)
+        self.assertIn(b'username may contain only letters', res.data)
 
     def test_can_login(self):
         """Test user can login"""
@@ -151,7 +151,7 @@ class AuthenticationTestCase(BaseTest):
         """Test user can login"""
         user, headers = self.authUser()
         res = self.client.get(
-            'api/v1/auth/get',
+            'api/v1/auth',
             headers=headers
         )
         self.assertEqual(res.status_code, 200)
