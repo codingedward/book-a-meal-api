@@ -16,6 +16,13 @@ class Config(object):
     JWT_BLACKLIST_ENABLED = True
     JWT_BLACKLIST_TOKEN_CHECKS = ['access']
 
+    MAIL_USE_TLS = True
+    MAIL_DEBUG = False
+    MAIL_PORT = os.getenv('MAIL_PORT')
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+
 
 class ProductionConfig(Config):
     """Production configuration"""
@@ -37,7 +44,7 @@ class TestingConfig(Config):
 
 
 app_config = {
-    'dev': DevConfig,
+    'development': DevConfig,
     'testing': TestingConfig,
     'production': ProductionConfig
 }
