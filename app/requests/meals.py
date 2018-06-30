@@ -2,7 +2,8 @@ from .base import JsonRequest
 
 
 class PostRequest(JsonRequest):
-    def rules(self):
+    @staticmethod
+    def rules():
         return {
             'name': 'required|alpha|unique:Meal,name',
             'cost': 'required|positive',
@@ -11,7 +12,8 @@ class PostRequest(JsonRequest):
 
 
 class PutRequest(JsonRequest):
-    def rules(self):
+    @staticmethod
+    def rules():
         return {
             'name': 'alpha',
             'cost': 'positive',
