@@ -4,7 +4,7 @@ from .base import JsonRequest
 class PostRequest(JsonRequest):
     def rules(self):
         return {
-            'name': 'required|string|unique:Meal,name',
+            'name': 'required|alpha|unique:Meal,name',
             'cost': 'required|positive',
             'img_url': 'url',
         }
@@ -13,7 +13,7 @@ class PostRequest(JsonRequest):
 class PutRequest(JsonRequest):
     def rules(self):
         return {
-            'name': 'string',
+            'name': 'alpha',
             'cost': 'positive',
             'img_url': 'url',
         }
