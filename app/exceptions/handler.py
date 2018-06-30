@@ -4,8 +4,8 @@
 import json
 from flask import jsonify
 from app.models import Blacklist
-from app.validation.validator import ValidationException
 from werkzeug.exceptions import default_exceptions
+from . import ValidationException
 
 
 def init_app(app):
