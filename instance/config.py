@@ -26,6 +26,7 @@ class Config(object):
 
 class ProductionConfig(Config):
     """Production configuration"""
+    ENV = 'production'
     DEBUG = False
     TESTING = False
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(hours=2)
@@ -33,11 +34,13 @@ class ProductionConfig(Config):
 
 class DevConfig(Config):
     "Config for development"
+    ENV = 'development'
     DEBUG = True
 
 
 class TestingConfig(Config):
     """Testing configuration"""
+    ENV = 'testing'
     DEBUG = True
     TESTING = True
     SQLALCHEMY_DATABASE_URI = os.getenv('TEST_DATABASE_URL')
