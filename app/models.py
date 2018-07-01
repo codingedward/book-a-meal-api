@@ -7,12 +7,6 @@ from datetime import datetime, date
 from sqlalchemy import cast, or_
 
 
-class UserType:
-    """Users roles"""
-    ADMIN = 1
-    USER = 2
-
-
 class BaseModel:
 
     _fields = []
@@ -227,6 +221,11 @@ class PasswordReset(db.Model, BaseModel):
         self.user_id = user_id
 
 
+class UserType:
+    """Users roles"""
+    ADMIN = 1
+    USER = 2
+
 class User(db.Model, BaseModel):
     """This will have application's users details"""
 
@@ -235,9 +234,9 @@ class User(db.Model, BaseModel):
     _fields = ['username', 'email', 'password', 'token', 'role']
 
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(255))
+    username = db.Column(db.String(256))
     email = db.Column(db.String(1024), unique=True)
-    password = db.Column(db.String(300))
+    password = db.Column(db.String(256))
     token = db.Column(db.String(1024))
     role = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
@@ -284,7 +283,7 @@ class Menu(db.Model, BaseModel):
     _fields = ['name']
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255))
+    name = db.Column(db.String(256))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
@@ -379,7 +378,7 @@ class Meal(db.Model, BaseModel):
     _fields = ['name', 'cost', 'img_url']
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(255), unique=True)
+    name = db.Column(db.String(256), unique=True)
     cost = db.Column(db.Float(2))
     img_url = db.Column(db.String(2048))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
@@ -395,14 +394,22 @@ class Meal(db.Model, BaseModel):
         self.img_url = img_url
 
 
+class OrderStatus:
+    """Order Status"""
+    PENDING = 1
+    ACCEPTED = 2
+    REVOKED = 3
+
+
 class Order(db.Model, BaseModel):
     """Holds an order of the application"""
 
     __tablename__ = 'orders'
-    _fields = ['quantity', 'menu_item_id', 'user_id']
+    _fields = ['quantity', 'menu_item_id', 'user_id', 'status']
 
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, default=1)
+    status = db.Column(db.Integer, default=OrderStatus.PENDING)
     menu_item_id = db.Column(
         db.Integer, db.ForeignKey('menu_items.id', ondelete='CASCADE'))
     user_id = db.Column(db.Integer,
@@ -471,8 +478,8 @@ class Notification(db.Model, BaseModel):
     _fields = ['title', 'message', 'user_id']
 
     id = db.Column(db.Integer, primary_key=True)
-    title = db.Column(db.String(255))
-    message = db.Column(db.String(1024))
+    title = db.Column(db.String(256))
+    message = db.Column(db.String(2048))
     user_id = db.Column(db.Integer,
                         db.ForeignKey('users.id', ondelete='CASCADE'))
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
@@ -484,6 +491,14 @@ class Notification(db.Model, BaseModel):
     # relationship with a user
     user = db.relationship(
         'User', backref=db.backref('notifications', lazy='dynamic'))
+
+    @classmethod
+    def paginate(cls, filters=None, query=None, user_id=None, name='data'):
+        # if user notifications specified...
+        query = cls.query
+        if user_id:
+            query = query.filter(cls.user_id == user_id)
+        return BaseModel.paginate(filters=filters, query=query, name=name)
 
     def __init__(self, title=None, message=None, user_id=None):
         """Initialize the notification"""
