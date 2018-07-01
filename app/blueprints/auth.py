@@ -6,7 +6,7 @@ from app.middlewares.validation import validate
 from app.models import User, Blacklist, PasswordReset
 from app.middlewares.auth import admin_auth, user_auth
 from app.mail import email_verification, password_reset
-from flask import Blueprint, request, jsonify, make_response
+from flask import Blueprint, request, jsonify, make_response, current_app
 from flask_jwt_extended import (create_access_token, get_jwt_identity,
                                 get_raw_jwt)
 from app.requests.auth import (LoginRequest, RegisterRequest,
@@ -26,7 +26,7 @@ def register():
     user.token = str(user.id) + rand_string(size=60)
     user.save()
 
-    env = os.getenv('APP_MODE')
+    env = current_app.config['ENV']
     resp = {
         'success':
         True,
@@ -73,7 +73,7 @@ def verify():
     })
 
 
-@auth.route('/api/v1/auth/make-password-reset', methods=['POST'])
+@auth.route('/api/v1/auth/password-reset', methods=['POST'])
 @validate(MakePasswordResetRequest)
 def make_password_reset():
     """Creates a password reset token"""
@@ -91,7 +91,7 @@ def make_password_reset():
                     'Please login to your email address to proceed.')
     }
 
-    env = os.getenv('APP_MODE')
+    env = current_app.config['ENV']
     if env == 'production':
         try:
             password_reset(token=data['token'], recipient=email)
@@ -107,7 +107,7 @@ def make_password_reset():
         return jsonify(resp)
 
 
-@auth.route('/api/v1/auth/password-reset', methods=['POST'])
+@auth.route('/api/v1/auth/password-reset', methods=['PUT'])
 @validate(PasswordResetRequest)
 def password_reset():
     """Makes a password reset"""
@@ -141,8 +141,8 @@ def login():
             'message': 'Invalid credentials',
         }), 400
 
-    env = os.getenv('APP_MODE')
-    if env == 'production' and user.token != '':
+    env = current_app.config['ENV']
+    if env in ['production', 'development'] and user.token != '':
         return jsonify({
             'success':
             False,
