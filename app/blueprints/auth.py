@@ -23,10 +23,8 @@ def register():
     password"""
 
     user = User.create(request.json)
-
-    if os.getenv('APP_MODE') not in ['testing', 'development']:
-        user.token = str(user.id) + rand_string(size=60)
-        user.save()
+    user.token = str(user.id) + rand_string(size=60)
+    user.save()
 
     env = os.getenv('APP_MODE')
     resp = {
@@ -34,8 +32,8 @@ def register():
         True,
         'user':
         user.to_dict(),
-        'message': ("Successfully registered account."
-                    "Please verify your email to proceed.")
+        'message': ('Successfully registered account.'
+                    'Please verify your email to proceed.')
     }
     if env == 'production':
         try:
