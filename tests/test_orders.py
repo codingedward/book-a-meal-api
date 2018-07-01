@@ -57,7 +57,7 @@ class TestOrders(BaseTest):
             }),
             headers=self.user_headers)
         self.assertEqual(res.status_code, 400)
-        self.assertIn(b'meals are available', res.data)
+        self.assertIn(b'meal(s) are available', res.data)
 
     def test_can_update_order(self):
         json_res = self.create_order()
