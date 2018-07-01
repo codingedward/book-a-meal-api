@@ -1,7 +1,7 @@
 from flask import request
 from datetime import date
 from flask_restful import Resource
-from app.models import Order, MenuItem
+from app.models import OrderStatus, Order, MenuItem, Notification
 from app.requests.orders import PostRequest, PutRequest
 from app.middlewares.auth import user_auth, admin_auth
 from app.utils import current_user
@@ -20,10 +20,14 @@ class OrderResource(Resource):
                 'message': 'Order not found.',
             }, 404
 
+        fields = decoded_qs()
+        if fields and fields.get('fields') is not None:
+            fields = fields.get('fields').split(',')
+
         return {
             'success': True,
             'message': 'Order successfully retrieved.',
-            'order': order.to_dict()
+            'order': order.to_dict(fields=fields)
         }
 
     @user_auth
@@ -46,32 +50,68 @@ class OrderResource(Resource):
                 'message': 'Unauthorized access to this order.'
             }, 401
 
-        # check that we have enough quantity...
-        menu_item = MenuItem.query.get(request.json['menu_item_id'])
-        available = order.quantity + menu_item.quantity
-        if available < request.json['quantity']:
-            message = None
-            if menu_item.quantity > 0:
-                message = 'Only {} more meals are available.'.format(
-                    menu_item.quantity)
-            else:
-                message = 'No more orders can be made on this meal.'
+        if request.json.get('quantity'):
+            # check that we have enough quantity...
+            menu_item = MenuItem.query.get(request.json['menu_item_id'])
+            available = order.quantity + menu_item.quantity
+            if available < request.json['quantity']:
+                message = None
+                if menu_item.quantity > 0:
+                    message = 'Only {} more meals are available.'.format(
+                        menu_item.quantity)
+                else:
+                    message = 'No more orders can be made on this meal.'
+                return {
+                    'success': False,
+                    'message': 'Validation error.',
+                    'errors': {
+                        'quantity': [message]
+                    }
+                }, 400
 
-            return {
-                'success': False,
-                'message': 'Validation error.',
-                'errors': {
-                    'quantity': [message]
-                }
-            }, 400
+            # set the new quantity...
+            menu_item.quantity = (
+                menu_item.quantity - request.json['quantity'] + order.quantity)
+            menu_item.save()
 
-        # set the new quantity...
-        menu_item.quantity = (
-            menu_item.quantity - request.json['quantity'] + order.quantity)
-        menu_item.save()
+        # save status for comparison
+        order_status = order.status
 
         # update...
         order.update(request.json)
+
+        # for notification
+        message = title = ''
+
+        # check if order status has been changed by the admin
+        if order_status != order.status:
+            status = ''
+            if order.status == OrderStatus.PENDING:
+                status = 'Pending'
+            elif order.status == OrderStatus.ACCEPTED:
+                status = 'Accepted'
+            else:
+                status = 'Revoked'
+            title = 'Order status changed'
+            message = """Your order (order id: {}) for {} with {} items
+            status has changed to .""".format(
+                order.id, order.menu_item.meal.name, order.quantity, status)
+
+        # use update their own order...
+        else:
+            title = 'Order updated'
+            # save notification
+            message = """You updated your order (order id: {}) for
+            {} with {} items.""".format(order.id, order.menu_item.meal.name,
+                                        order.quantity)
+
+        # save notification
+        Notification.create({
+            'user_id': user.id,
+            'title': title,
+            'message': message
+        })
+
         return {
             'success': True,
             'message': 'Order successfully updated.',
@@ -103,6 +143,18 @@ class OrderResource(Resource):
 
         # now delete...
         order.delete()
+
+        if user.id == order.user_id:
+            # save notification
+            message = """You deleted your order (order id: {}) for
+            {} with {} items.""".format(order.id, order.menu_item.meal.name,
+                                        order.quantity)
+            Notification.create({
+                'user_id': user.id,
+                'title': 'Order deleted',
+                'message': message
+            })
+
         return {
             'success': True,
             'message': 'Order successfully deleted.',
@@ -121,10 +173,7 @@ class OrderListResource(Resource):
             user_id = user.id
 
         resp = Order.paginate(
-            filters=decoded_qs(),
-            user_id=user_id,
-            name='orders'
-        )
+            filters=decoded_qs(), user_id=user_id, name='orders')
         resp['message'] = 'Successfully retrieved orders.'
         resp['success'] = True
         return resp
@@ -140,13 +189,12 @@ class OrderListResource(Resource):
                 'message': 'Unauthorized to create this order.'
             }, 401
 
-
         # check we have enough quantity...
         menu_item = MenuItem.query.get(request.json['menu_item_id'])
         if menu_item.quantity < request.json['quantity']:
             message = None
             if menu_item.quantity > 0:
-                message = 'Only {} meals are available.'.format(
+                message = 'Only {} meal(s) are available.'.format(
                     menu_item.quantity)
             else:
                 message = 'No more orders can be made on this meal.'
@@ -165,6 +213,18 @@ class OrderListResource(Resource):
 
         # create order...
         order = Order.create(request.json)
+
+        message = """Your order (order id: {}) for
+        {} with {} items was successfully received.""".format(
+            order.id, order.menu_item.meal.name, order.quantity)
+
+        # save notification
+        Notification.create({
+            'user_id': user.id,
+            'title': 'Order recieved',
+            'message': message
+        })
+
         return {
             'success': True,
             'message': 'Successfully saved order.',
