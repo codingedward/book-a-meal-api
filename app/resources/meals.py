@@ -19,10 +19,14 @@ class MealResource(Resource):
                 'message': 'Meal not found.',
             }, 404
 
+        fields = decoded_qs()
+        if fields and fields.get('fields') is not None:
+            fields = fields.get('fields').split(',')
+
         return {
             'success': True,
             'message': 'Meal successfully retrieved.',
-            'meal': meal.to_dict(fields=request.args.get('fields'))
+            'meal': meal.to_dict(fields=fields)
         }
 
     @admin_auth
@@ -93,5 +97,5 @@ class MealListResource(Resource):
         return {
             'success': True,
             'message': 'Successfully saved meal.',
-            'meal': meal.to_dict(fields=request.args.get('fields'))
+            'meal': meal.to_dict()
         }, 201

@@ -19,10 +19,14 @@ class MenuResource(Resource):
                 'message': 'Menu not found.',
             }, 404
 
+        fields = decoded_qs()
+        if fields and fields.get('fields') is not None:
+            fields = fields.get('fields').split(',')
+
         return {
             'success': True,
             'message': 'Menu successfully retrieved.',
-            'menu': menu.to_dict()
+            'menu': menu.to_dict(fields=fields)
         }
 
     @admin_auth
