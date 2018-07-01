@@ -1,4 +1,5 @@
 from .base import JsonRequest
+from app.utils import current_user
 
 
 class PostRequest(JsonRequest):
@@ -14,7 +15,10 @@ class PostRequest(JsonRequest):
 class PutRequest(JsonRequest):
     @staticmethod
     def rules():
-        return {
+        rules = {
             'quantity': 'integer|positive',
             'menu_item_id': 'integer|positive|exists:MenuItem,id',
-        }
+        } 
+        if current_user().is_caterer():
+            rules['status'] = 'integer|found_in:1,2,3'
+        return rules
