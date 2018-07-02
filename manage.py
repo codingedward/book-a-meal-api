@@ -21,7 +21,7 @@ def seed():
         username=os.getenv('DEFAULT_ADMIN_USERNAME'),
         email=os.getenv('DEFAULT_ADMIN_EMAIL'),
         password=os.getenv('DEFAULT_ADMIN_PASSWORD'),
-        role=UserType.ADMIN,
+        role=UserType.SUPER_ADMIN,
         token=''
     )
     user.save()
