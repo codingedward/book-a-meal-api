@@ -223,6 +223,7 @@ class PasswordReset(db.Model, BaseModel):
 
 class UserType:
     """Users roles"""
+    SUPER_ADMIN = 0
     ADMIN = 1
     USER = 2
 
@@ -238,7 +239,7 @@ class User(db.Model, BaseModel):
     email = db.Column(db.String(1024), unique=True)
     password = db.Column(db.String(256))
     token = db.Column(db.String(1024))
-    role = db.Column(db.Integer)
+    role = db.Column(db.Integer, default=UserType.USER)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
         db.DateTime,
@@ -271,9 +272,14 @@ class User(db.Model, BaseModel):
         """Checks the password is correct against the password hash"""
         return bcrypt.verify(password, self.password)
 
-    def is_caterer(self):
+    def is_admin(self):
         """Checks if current user is a caterer"""
-        return self.role == UserType.ADMIN
+        return self.role in [UserType.ADMIN, UserType.SUPER_ADMIN]
+
+    def is_super_admin(self):
+        """Checks if current user is a caterer"""
+        return self.role == UserType.SUPER_ADMIN
+
 
 
 class Menu(db.Model, BaseModel):
