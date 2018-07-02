@@ -17,6 +17,7 @@ from app.resources.menu_items import MenuItemResource, MenuItemListResource
 from app.resources.orders import OrderResource, OrderListResource
 from app.resources.notifications import (NotificationResource,
                                          NotificationListResource)
+from app.resources.users import UserResource, UserListResource
 
 
 def create_app(config_name):
@@ -42,6 +43,8 @@ def create_app(config_name):
     api.add_resource(MenuItemListResource, '/menu-items')
     api.add_resource(OrderResource, '/orders/<int:order_id>')
     api.add_resource(OrderListResource, '/orders')
+    api.add_resource(UserResource, '/users/<int:user_id>')
+    api.add_resource(UserListResource, '/users')
     api.add_resource(NotificationResource,
                      '/notifications/<int:notification_id>')
     api.add_resource(NotificationListResource, '/notifications')
