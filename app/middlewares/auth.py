@@ -15,7 +15,7 @@ def admin_auth(fn):
     @wraps(fn)
     @user_auth
     def wrapper(*args, **kwargs):
-        if not current_user().is_caterer():
+        if not current_user().is_admin():
             abort(
                 make_response(
                     jsonify({'message': 'Unauthorized access to a non-admin'}),
