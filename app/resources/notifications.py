@@ -73,7 +73,9 @@ class NotificationListResource(Resource):
     @user_auth
     def delete(self):
         user = current_user()
-        notification = Notification.query.filter_by(user_id=user.id).delete()
+        notifications = Notification.query.filter_by(user_id=user.id).all()
+        for notification in notifications:
+            notification.delete()
         return {
             'success': True,
             'message': 'Successfully deleted all notifications.',
