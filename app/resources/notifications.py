@@ -64,7 +64,7 @@ class NotificationListResource(Resource):
         resp = Notification.paginate(
             name='notifications',
             filters=decoded_qs(),
-            user_id=current_user().user_id
+            user_id=current_user().id
         )
         resp['message'] = 'Successfully retrieved notifications.'
         resp['success'] = True
