@@ -54,12 +54,16 @@ class MealResource(Resource):
                     }
                 }, 400
 
+        fields = decoded_qs()
+        if fields and fields.get('fields') is not None:
+            fields = fields.get('fields').split(',')
+
         # now update...
         meal.update(request.json)
         return {
             'success': True,
             'message': 'Meal successfully updated.',
-            'meal': meal.to_dict(fields=request.args.get('fields'))
+            'meal': meal.to_dict(fields=fields)
         }
 
     @admin_auth
