@@ -44,7 +44,7 @@ class OrderResource(Resource):
 
         # check user is authorized to update order
         user = current_user()
-        if not user.is_caterer() and user.id != order.user_id:
+        if not user.is_admin() and user.id != order.user_id:
             return {
                 'success': False,
                 'message': 'Unauthorized access to this order.'
@@ -130,7 +130,7 @@ class OrderResource(Resource):
 
         # check user can delete this order...
         user = current_user()
-        if not user.is_caterer() and user.id != order.user_id:
+        if not user.is_admin() and user.id != order.user_id:
             return {
                 'success': False,
                 'message': 'Unauthorized access to this order.'
@@ -167,7 +167,7 @@ class OrderListResource(Resource):
 
         # user should see his/her orders only...
         user = current_user()
-        if user.is_caterer():
+        if user.is_admin():
             user_id = None
         else:
             user_id = user.id
@@ -183,7 +183,7 @@ class OrderListResource(Resource):
     def post(self):
 
         user = current_user()
-        if not user.is_caterer() and user.id != request.json['user_id']:
+        if not user.is_admin() and user.id != request.json['user_id']:
             return {
                 'success': False,
                 'message': 'Unauthorized to create this order.'
