@@ -167,6 +167,48 @@ class AuthenticationTestCase(BaseTest):
         self.assertEqual(res.status_code, 200)
         self.assertIn(b'Successfully logged out', res.data)
 
+    def test_can_request_password_reset(self):
+        res = self.client.post(
+            'api/v1/auth/signup',
+            data=self.data(),
+            headers=self.headers
+        )
+        self.assertEqual(res.status_code, 201)
+        res = self.client.post(
+            'api/v1/auth/password-reset',
+            data=self.data(),
+            headers=self.headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Password reset created', res.data)
+
+    def test_can_make_password_reset(self):
+        res = self.client.post(
+            'api/v1/auth/signup',
+            data=self.data(),
+            headers=self.headers
+        )
+        self.assertEqual(res.status_code, 201)
+        res = self.client.post(
+            'api/v1/auth/password-reset',
+            data=self.data(),
+            headers=self.headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Password reset created', res.data)
+        json_res = self.to_dict(res)
+        res = self.client.put(
+            'api/v1/auth/password-reset',
+            data=json.dumps({
+                'token': json_res['token'],
+                'password': 'secret2',
+                'password_confirmation': 'secret2'
+            }),
+            headers=self.headers
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertIn(b'Password successfully reset', res.data)
+
     def tearDown(self):
         with self.app.app_context():
             db.drop_all()
