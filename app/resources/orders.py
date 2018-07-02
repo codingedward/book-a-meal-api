@@ -107,7 +107,7 @@ class OrderResource(Resource):
 
         # save notification
         Notification.create({
-            'user_id': user.id,
+            'user_id': order.user_id,
             'title': title,
             'message': message
         })
