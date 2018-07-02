@@ -343,10 +343,9 @@ class MenuItem(db.Model, BaseModel):
     """Holds the menu item of the application"""
 
     __tablename__ = 'menu_items'
-    _fields = ['day', 'menu_id', 'meal_id', 'quantity']
+    _fields = ['menu_id', 'meal_id', 'quantity']
 
     id = db.Column(db.Integer, primary_key=True)
-    day = db.Column(db.Date, default=db.func.current_timestamp())
     menu_id = db.Column(db.Integer, db.ForeignKey('menus.id'))
     meal_id = db.Column(db.Integer, db.ForeignKey('meals.id'))
     quantity = db.Column(db.Integer)
