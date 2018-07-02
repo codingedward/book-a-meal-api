@@ -19,6 +19,6 @@ class PutRequest(JsonRequest):
             'quantity': 'integer|positive',
             'menu_item_id': 'integer|positive|exists:MenuItem,id',
         } 
-        if current_user().is_caterer():
+        if current_user().is_admin():
             rules['status'] = 'integer|found_in:1,2,3'
         return rules
