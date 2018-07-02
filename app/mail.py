@@ -31,5 +31,5 @@ def password_reset(token=None, recipient=None):
         sender='andela.book.a.meal@gmail.com',
         recipients=[recipient])
     msg.html = template.render(
-        message={'link': os.getenv('EMAIL_VERIFICATION_ENDPOINT') + token})
+        message={'link': os.getenv('PASSWORD_RESET_ENDPOINT') + token})
     mail.send(msg)
