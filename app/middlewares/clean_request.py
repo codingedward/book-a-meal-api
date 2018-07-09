@@ -8,7 +8,8 @@ def clean_json_request(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
         if not request.is_json:
-            raise ValidationException(['Request must be valid JSON'])
+            raise ValidationException({'request':
+                                       ['Request must be valid JSON']})
 
         # empty string fields...
         to_delete = []
