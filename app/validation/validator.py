@@ -368,7 +368,8 @@ class Validator:
 
     def _url(self, field=None, params=None, **kwargs):
         ptn = '^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$'
-        if not re.match(ptn, self._request[field]):
+        value = self._request[field]
+        if not re.match(ptn, value) and value != '#':
             return (False, trans('url', {':field:': field}))
         return (True, '')
 
