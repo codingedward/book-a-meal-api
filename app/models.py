@@ -120,6 +120,8 @@ class BaseModel:
         if not query:
             query = cls.query
 
+        # new first...
+        query = query.order_by(cls.id.desc())
         # query with filters
         query = cls._apply_db_filters(query, filters)
         paginated = query.paginate(error_out=False)
@@ -131,6 +133,7 @@ class BaseModel:
             'per_page': paginated.per_page,
             'next_page': paginated.next_num,
             'prev_page': paginated.prev_num,
+            'current_count': len(paginated.items),
             name: cls._apply_data_filters(paginated.items, filters)
         }
 
