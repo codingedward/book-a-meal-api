@@ -21,6 +21,7 @@ bcrypt = "*"
 flask-script = "*"
 "psycopg2" = "*"
 flask-mail = "*"
+flask-cors = "*"
 
 [requires]
 python_version = "3.6"
