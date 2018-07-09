@@ -43,7 +43,7 @@ class MealResource(Resource):
         # check if another meal exists with new name...
         if request.json.get('name'):
             name = request.json['name']
-            new_meal = Meal.query.filter_by(name=name).first()
+            new_meal = Meal.query.filter(Meal.name.ilike(name)).first()
             if new_meal and new_meal.name.lower() == name.lower() and \
                     new_meal.id != meal_id:
                 return {
