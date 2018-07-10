@@ -119,9 +119,9 @@ class BaseModel:
         # default query passed?
         if not query:
             query = cls.query
+            # new first...
+            query = query.order_by(cls.id.desc())
 
-        # new first...
-        query = query.order_by(cls.id.desc())
         # query with filters
         query = cls._apply_db_filters(query, filters)
         paginated = query.paginate(error_out=False)
@@ -470,6 +470,7 @@ class Order(db.Model, BaseModel):
         query = cls.query
         if user_id:
             query = query.filter(cls.user_id == user_id)
+            query = query.order_by(cls.id.desc())
         return BaseModel.paginate(filters=filters, query=query, name=name)
 
     def __init__(self, menu_item_id=None, user_id=None, quantity=None):
@@ -506,6 +507,7 @@ class Notification(db.Model, BaseModel):
         query = cls.query
         if user_id:
             query = query.filter(cls.user_id == user_id)
+            query = query.order_by(cls.id.desc())
         return BaseModel.paginate(filters=filters, query=query, name=name)
 
     def __init__(self, title=None, message=None, user_id=None):
