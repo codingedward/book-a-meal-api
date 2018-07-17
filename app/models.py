@@ -112,7 +112,7 @@ class BaseModel:
                     dict_item[model_name] = getattr(
                         item, model_name).to_dict(fields=fields)
                     #except AttributeError:
-                    #break
+                        #break
         return dict_items
 
     @classmethod
@@ -231,7 +231,6 @@ class UserType:
     ADMIN = 1
     USER = 2
 
-
 class User(db.Model, BaseModel):
     """This will have application's users details"""
 
@@ -284,6 +283,7 @@ class User(db.Model, BaseModel):
     def is_super_admin(self):
         """Checks if current user is a caterer"""
         return self.role == UserType.SUPER_ADMIN
+
 
 
 class Menu(db.Model, BaseModel):
@@ -358,10 +358,8 @@ class MenuItem(db.Model, BaseModel):
     _fields = ['menu_id', 'meal_id', 'quantity']
 
     id = db.Column(db.Integer, primary_key=True)
-    menu_id = db.Column(db.Integer,
-                        db.ForeignKey('menus.id', ondelete='CASCADE'))
-    meal_id = db.Column(db.Integer,
-                        db.ForeignKey('meals.id', ondelete='CASCADE'))
+    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id', ondelete='CASCADE'))
+    meal_id = db.Column(db.Integer, db.ForeignKey('meals.id', ondelete='CASCADE'))
     quantity = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
@@ -402,8 +400,7 @@ class MenuItem(db.Model, BaseModel):
         if 'search' in filters:
             pattern = '%{}%'.format(filters['search'])
             query = query.filter(
-                or_(
-                    MenuItem.meal.has(Meal.name.ilike(pattern)),
+                or_(MenuItem.meal.has(Meal.name.ilike(pattern)),
                     MenuItem.menu.has(Menu.name.ilike(pattern))))
 
         # time specified for orders
@@ -439,7 +436,6 @@ class MenuItem(db.Model, BaseModel):
         query = cls.query.order_by(cls.id.desc())
         query = cls._apply_db_filters(query, filters)
         return super().paginate(filters=filters, query=query, name=name)
-
 
 class Meal(db.Model, BaseModel):
     """Holds a meal in the application"""
@@ -506,13 +502,11 @@ class Order(db.Model, BaseModel):
         if 'search' in filters:
             pattern = '%{}%'.format(filters['search'])
             query = query.filter(
-                or_(
-                    Order.user.has(User.username.ilike(pattern)),
+                or_(Order.user.has(User.username.ilike(pattern)),
                     Order.user.has(User.email.ilike(pattern)),
-                    Order.menu_item.has(
-                        MenuItem.menu.has(Menu.name.ilike(pattern))),
-                    Order.menu_item.has(
-                        MenuItem.meal.has(Meal.name.ilike(pattern)))))
+                    Order.menu_item.has(MenuItem.menu.has(Menu.name.ilike(pattern))),
+                    Order.menu_item.has(MenuItem.meal.has(Meal.name.ilike(pattern))))
+            )
 
         # time specified for orders
         if 'time' in filters:
