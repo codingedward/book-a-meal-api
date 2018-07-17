@@ -43,7 +43,8 @@ def register():
             user.delete()
             return jsonify({
                 'success': False,
-                'message': 'Connection error. Please try again.'
+                'message': 'Connection error. Please try again.',
+                'error': e
             }), 400
         return jsonify(resp), 201
     elif env == 'development':
