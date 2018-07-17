@@ -28,8 +28,7 @@ class EmailVerificationRequest(JsonRequest):
 class MakePasswordResetRequest(JsonRequest):
     @staticmethod
     def rules():
-        return {'email': 'required|string|email|exists:User,email'}
-
+        return { 'email': 'required|string|email|exists:User,email' }
 
 class PasswordResetRequest(JsonRequest):
     @staticmethod

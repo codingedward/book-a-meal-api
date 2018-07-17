@@ -9,7 +9,7 @@ env = Environment(
 )
 
 
-def email_verification(token=None, recipient=None):
+def email_verification_mail(token=None, recipient=None):
     if token is None or recipient is None:
         return
     template = env.get_template('email_verification.html')
@@ -22,7 +22,7 @@ def email_verification(token=None, recipient=None):
     mail.send(msg)
 
 
-def password_reset(token=None, recipient=None):
+def password_reset_mail(token=None, recipient=None):
     if token is None or recipient is None:
         return
     template = env.get_template('password_reset.html')

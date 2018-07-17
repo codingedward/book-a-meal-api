@@ -5,7 +5,7 @@ from app.utils import rand_string
 from app.middlewares.validation import validate
 from app.models import User, Blacklist, PasswordReset
 from app.middlewares.auth import admin_auth, user_auth
-from app.mail import email_verification, password_reset
+from app.mail import email_verification_mail, password_reset_mail
 from flask import Blueprint, request, jsonify, make_response, current_app
 from flask_jwt_extended import (create_access_token, get_jwt_identity,
                                 get_raw_jwt)
@@ -37,8 +37,8 @@ def register():
     }
     if env == 'production':
         try:
-            email_verification(token=user.token, recipient=user.email)
-        except Exception as e:
+            email_verification_mail(token=user.token, recipient=user.email)
+        except Exception:
             user.delete()
             return jsonify({
                 'success': False,
@@ -94,7 +94,7 @@ def make_password_reset():
     env = current_app.config['ENV']
     if env == 'production':
         try:
-            password_reset(token=token, recipient=email)
+            password_reset_mail(token=token, recipient=email)
         except Exception:
             return jsonify({
                 'success': False,
