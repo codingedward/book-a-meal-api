@@ -92,16 +92,16 @@ class OrderResource(Resource):
                 status = 'Accepted'
             else:
                 status = 'Revoked'
-            title = 'Order status changed'
-            message = """Your order (order id: {}) for {} with {} items
-            status has changed to .""".format(
+            title = 'Order(#{}) status changed'.format(order.id)
+            message = """Your order (#{}) for {} with {} items
+            status has changed to {}.""".format(
                 order.id, order.menu_item.meal.name, order.quantity, status)
 
         # use update their own order...
         else:
-            title = 'Order updated'
+            title = 'Order(#{}) updated'.format(order.id)
             # save notification
-            message = """You updated your order (order id: {}) for
+            message = """You updated your order (#{}) for
             {} with {} items.""".format(order.id, order.menu_item.meal.name,
                                         order.quantity)
 
@@ -114,7 +114,7 @@ class OrderResource(Resource):
 
         return {
             'success': True,
-            'message': 'Order successfully updated.',
+            'message': 'Order(#{}) successfully updated.'.format(order.id),
             'order': order.to_dict()
         }
 
@@ -146,12 +146,12 @@ class OrderResource(Resource):
 
         if user.id == order.user_id:
             # save notification
-            message = """You deleted your order (order id: {}) for
+            message = """You deleted your order (#{}) for
             {} with {} items.""".format(order.id, order.menu_item.meal.name,
                                         order.quantity)
             Notification.create({
                 'user_id': user.id,
-                'title': 'Order deleted',
+                'title': 'Order(#{}) deleted'.format(order.id),
                 'message': message
             })
 
@@ -214,14 +214,14 @@ class OrderListResource(Resource):
         # create order...
         order = Order.create(request.json)
 
-        message = """Your order (order id: {}) for
+        message = """Your order (#{}) for
         {} with {} items was successfully received.""".format(
             order.id, order.menu_item.meal.name, order.quantity)
 
         # save notification
         Notification.create({
             'user_id': user.id,
-            'title': 'Order recieved',
+            'title': 'Order(#{}) recieved'.format(order.id),
             'message': message
         })
 
