@@ -37,8 +37,8 @@ def register():
     }
     if env == 'production':
         try:
-            email_verification(token=data['token'], recipient=data['email'])
-        except Exception:
+            email_verification(token=user.token, recipient=user.email)
+        except Exception as e:
             user.delete()
             return jsonify({
                 'success': False,
@@ -94,7 +94,7 @@ def make_password_reset():
     env = current_app.config['ENV']
     if env == 'production':
         try:
-            password_reset(token=data['token'], recipient=email)
+            password_reset(token=token, recipient=email)
         except Exception:
             return jsonify({
                 'success': False,
