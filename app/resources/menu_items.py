@@ -1,10 +1,12 @@
 from flask import request
+from datetime import date
 from app.models import MenuItem
 from flask_restful import Resource
 from app.requests.menu_items import PostRequest, PutRequest
 from app.middlewares.auth import user_auth, admin_auth
 from app.middlewares.validation import validate
 from app.utils import decoded_qs
+from sqlalchemy import cast, DATE
 
 
 class MenuItemResource(Resource):
@@ -44,9 +46,11 @@ class MenuItemResource(Resource):
         meal_id = request.json.get('meal_id') or menu_item.meal_id
         menu_id = request.json.get('menu_id') or menu_item.menu_id
 
-        # check if another menu item exists with same values
-        existing = MenuItem.query.filter_by(
-            meal_id=meal_id, menu_id=menu_id).first()
+        # check if another menu item exists with same values today
+        timestamp = cast(MenuItem.created_at, DATE)
+        existing = MenuItem.query.filter(timestamp == date.today()).filter_by(
+            meal_id=meal_id, menu_id=menu_id
+        ).first()
         if existing and existing.id != menu_item_id:
             return {
                 'success': False,
@@ -99,8 +103,12 @@ class MenuItemListResource(Resource):
         # ensure uniqueness
         meal_id = request.json['meal_id']
         menu_id = request.json['menu_id']
-        menu_item = MenuItem.query.filter_by(
-            meal_id=meal_id, menu_id=menu_id).first()
+
+        # check if another menu item exists with same values today
+        timestamp = cast(MenuItem.created_at, DATE)
+        menu_item = MenuItem.query.filter(timestamp == date.today()).filter_by(
+            meal_id=meal_id, menu_id=menu_id
+        ).first()
         if menu_item:
             return {
                 'success': False,
