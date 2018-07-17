@@ -71,7 +71,7 @@ class TestOrders(BaseTest):
         json_res = self.to_dict(res)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(json_res['order']['quantity'], 20)
-        self.assertIn(b'Order successfully updated', res.data)
+        self.assertIn(b'successfully updated', res.data)
 
     def test_admin_can_update_order(self):
         json_res = self.create_order()
@@ -85,7 +85,7 @@ class TestOrders(BaseTest):
         json_res = self.to_dict(res)
         self.assertEqual(res.status_code, 200)
         self.assertEqual(json_res['order']['quantity'], 20)
-        self.assertIn(b'Order successfully updated', res.data)
+        self.assertIn(b'successfully updated', res.data)
 
     def test_cannot_update_another_users_order(self):
         json_res = self.create_order()
@@ -106,7 +106,7 @@ class TestOrders(BaseTest):
             'api/v1/orders/{}'.format(json_res['order']['id']),
             headers=self.user_headers)
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Order successfully retrieved', res.data)
+        self.assertIn(b'successfully retrieved', res.data)
 
     def test_can_get_many_orders(self):
         json_res = self.create_order()
@@ -130,7 +130,7 @@ class TestOrders(BaseTest):
             'api/v1/orders/{}'.format(json_res['order']['id']),
             headers=self.user_headers)
         self.assertEqual(res.status_code, 200)
-        self.assertIn(b'Order successfully deleted', res.data)
+        self.assertIn(b'successfully deleted', res.data)
         res = self.client.get(
             'api/v1/orders/{}'.format(json_res['order']['id']),
             headers=self.user_headers)

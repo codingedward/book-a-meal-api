@@ -395,7 +395,7 @@ class MenuItem(db.Model, BaseModel):
     def _apply_db_filters(cls, query, filters):
         query = BaseModel._apply_db_filters(query, filters)
         # time specified for orders
-        if 'time' in filters:
+        if filters and 'time' in filters:
             time = filters['time']
             # compare as dates
             timestamp = cast(cls.created_at, db.DATE)
@@ -487,7 +487,7 @@ class Order(db.Model, BaseModel):
     def _apply_db_filters(cls, query, filters):
         query = BaseModel._apply_db_filters(query, filters)
         # time specified for orders
-        if 'time' in filters:
+        if filters and 'time' in filters:
             time = filters['time']
             # compare as dates
             timestamp = cast(cls.created_at, db.DATE)

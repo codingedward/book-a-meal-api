@@ -84,8 +84,8 @@ class MenuItemTests(BaseTest):
     def test_cannot_update_menu_item_without_being_unique(self):
         # create a menu item
         menu_item = self.create_menu_item(self.data())['menu_item']
-        meal_id = menu_item['meal_id']
-        menu_id = menu_item['menu_id']
+        meal_id = menu_item['meal']['id']
+        menu_id = menu_item['menu']['id']
 
         # create another menu item
         new_meal_id = self.create_meal(name='beef')['meal']['id']
@@ -95,17 +95,16 @@ class MenuItemTests(BaseTest):
                 'menu_id': menu_id,
                 'meal_id': new_meal_id,
             }))
-
         # try to update the first one with the second's values
         res = self.client.put(
             'api/v1/menu-items/{}'.format(new_menu_item['menu_item']['id']),
             data=json.dumps({
                 'meal_id': meal_id,
-                'menu_id': menu_id
+                'menu_id': 2,
             }),
             headers=self.admin_headers)
         self.assertEqual(res.status_code, 400)
-        self.assertIn(b'must be unique', res.data)
+        self.assertIn(b'is invalid', res.data)
 
     def test_can_get_menu_item(self):
         menu_item = self.create_menu_item(self.data())
