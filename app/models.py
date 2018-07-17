@@ -112,7 +112,7 @@ class BaseModel:
                     dict_item[model_name] = getattr(
                         item, model_name).to_dict(fields=fields)
                     #except AttributeError:
-                        #break
+                    #break
         return dict_items
 
     @classmethod
@@ -122,9 +122,9 @@ class BaseModel:
             query = cls.query
             # new first...
             query = query.order_by(cls.id.desc())
+            # query with filters
+            query = cls._apply_db_filters(query, filters)
 
-        # query with filters
-        query = cls._apply_db_filters(query, filters)
         paginated = query.paginate(error_out=False)
         return {
             'pages': paginated.pages,
@@ -231,6 +231,7 @@ class UserType:
     ADMIN = 1
     USER = 2
 
+
 class User(db.Model, BaseModel):
     """This will have application's users details"""
 
@@ -283,7 +284,6 @@ class User(db.Model, BaseModel):
     def is_super_admin(self):
         """Checks if current user is a caterer"""
         return self.role == UserType.SUPER_ADMIN
-
 
 
 class Menu(db.Model, BaseModel):
@@ -358,8 +358,10 @@ class MenuItem(db.Model, BaseModel):
     _fields = ['menu_id', 'meal_id', 'quantity']
 
     id = db.Column(db.Integer, primary_key=True)
-    menu_id = db.Column(db.Integer, db.ForeignKey('menus.id', ondelete='CASCADE'))
-    meal_id = db.Column(db.Integer, db.ForeignKey('meals.id', ondelete='CASCADE'))
+    menu_id = db.Column(db.Integer,
+                        db.ForeignKey('menus.id', ondelete='CASCADE'))
+    meal_id = db.Column(db.Integer,
+                        db.ForeignKey('meals.id', ondelete='CASCADE'))
     quantity = db.Column(db.Integer)
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     updated_at = db.Column(
@@ -393,9 +395,19 @@ class MenuItem(db.Model, BaseModel):
 
     @classmethod
     def _apply_db_filters(cls, query, filters):
-        query = BaseModel._apply_db_filters(query, filters)
+        if not filters:
+            return query
+
+        # search in related
+        if 'search' in filters:
+            pattern = '%{}%'.format(filters['search'])
+            query = query.filter(
+                or_(
+                    MenuItem.meal.has(Meal.name.ilike(pattern)),
+                    MenuItem.menu.has(Menu.name.ilike(pattern))))
+
         # time specified for orders
-        if filters and 'time' in filters:
+        if 'time' in filters:
             time = filters['time']
             # compare as dates
             timestamp = cast(cls.created_at, db.DATE)
@@ -418,6 +430,7 @@ class MenuItem(db.Model, BaseModel):
                 time = str_to_date(time)
                 if time:
                     query = query.filter(timestamp == time)
+
         return query
 
     @classmethod
@@ -425,7 +438,8 @@ class MenuItem(db.Model, BaseModel):
         # if user menu items specified by date...
         query = cls.query.order_by(cls.id.desc())
         query = cls._apply_db_filters(query, filters)
-        return BaseModel.paginate(filters=filters, query=query, name=name)
+        return super().paginate(filters=filters, query=query, name=name)
+
 
 class Meal(db.Model, BaseModel):
     """Holds a meal in the application"""
@@ -485,9 +499,23 @@ class Order(db.Model, BaseModel):
 
     @classmethod
     def _apply_db_filters(cls, query, filters):
-        query = BaseModel._apply_db_filters(query, filters)
+        if not filters:
+            return query
+
+        # search in related
+        if 'search' in filters:
+            pattern = '%{}%'.format(filters['search'])
+            query = query.filter(
+                or_(
+                    Order.user.has(User.username.ilike(pattern)),
+                    Order.user.has(User.email.ilike(pattern)),
+                    Order.menu_item.has(
+                        MenuItem.menu.has(Menu.name.ilike(pattern))),
+                    Order.menu_item.has(
+                        MenuItem.meal.has(Meal.name.ilike(pattern)))))
+
         # time specified for orders
-        if filters and 'time' in filters:
+        if 'time' in filters:
             time = filters['time']
             # compare as dates
             timestamp = cast(cls.created_at, db.DATE)
@@ -510,6 +538,7 @@ class Order(db.Model, BaseModel):
                 time = str_to_date(time)
                 if time:
                     query = query.filter(timestamp == time)
+
         return query
 
     @classmethod
@@ -520,7 +549,7 @@ class Order(db.Model, BaseModel):
             query = query.filter(cls.user_id == user_id)
         query = query.order_by(cls.id.desc())
         query = cls._apply_db_filters(query, filters)
-        return BaseModel.paginate(filters=filters, query=query, name=name)
+        return super().paginate(filters=filters, query=query, name=name)
 
     def __init__(self, menu_item_id=None, user_id=None, quantity=None):
         """Initialize the order"""
@@ -557,7 +586,7 @@ class Notification(db.Model, BaseModel):
         if user_id:
             query = query.filter(cls.user_id == user_id)
         query = query.order_by(cls.id.desc())
-        return BaseModel.paginate(filters=filters, query=query, name=name)
+        return super().paginate(filters=filters, query=query, name=name)
 
     def __init__(self, title=None, message=None, user_id=None):
         """Initialize the notification"""
