@@ -40,14 +40,11 @@ def register():
             email_verification(token=user.token, recipient=user.email)
         except Exception as e:
             user.delete()
-            raise e
-        """
             user.delete()
             return jsonify({
                 'success': False,
                 'message': 'Connection error. Please try again.'
             }), 400
-        """
         return jsonify(resp), 201
     elif env == 'development':
         resp['token'] = user.token
