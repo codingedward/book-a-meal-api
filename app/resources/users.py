@@ -44,6 +44,15 @@ class UserResource(Resource):
         if fields and fields.get('fields') is not None:
             fields = fields.get('fields').split(',')
 
+
+        role = request.json.get('role')
+        if role and role == UserType.SUPER_ADMIN:
+            return {
+                'success': False,
+                'message': 'Only one super admin is allowed',
+            }, 400
+            
+
         # now update...
         user.update(request.json)
         return {
