@@ -36,6 +36,9 @@ def register():
                     'Please verify your email to proceed.')
     }
     if env == 'production':
+        email_verification(token=user.token, recipient=user.email)
+        user.delete()
+        """
         try:
             email_verification(token=user.token, recipient=user.email)
         except Exception as e:
@@ -44,6 +47,8 @@ def register():
                 'success': False,
                 'message': 'Connection error. Please try again.'
             }), 400
+
+        """
         return jsonify(resp), 201
     elif env == 'development':
         resp['token'] = user.token
